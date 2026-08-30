@@ -8,3 +8,8 @@ Thumbs.db
 # Dependencies / build (none currently, but future-proof)
 node_modules/
 dist/
+
+# Secrets — never commit tokens
+.env
+.env.*
+*.local
