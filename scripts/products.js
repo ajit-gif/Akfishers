@@ -392,6 +392,17 @@ function akfEscapeHTML(str) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+/* Turn a product image URL into a 1200x630 social-share (OG) crop */
+function akfOgImage(url) {
+  url = String(url || "");
+  if (url.indexOf("images.unsplash.com") > -1) {
+    return url.replace(/([?&])w=\d+/, "$1w=1200")
+              .replace(/([?&])h=\d+/, "$1h=630")
+      + (/[?&]h=/.test(url) ? "" : "&h=630");
+  }
+  return url;
+}
+
 function akfStars(rating) {
   var full = Math.round(rating);
   var s = "";
