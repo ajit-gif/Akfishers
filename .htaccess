@@ -9,39 +9,42 @@ DirectoryIndex index.html
   RewriteEngine On
   RewriteBase /
 
+  # Canonical target for every redirect below: https://akfishers.com
+  # Each rule forces scheme + host + clean path in ONE hop (no redirect chains).
+
   # ---------------------------------------------------------
-  # 1. Force HTTPS
+  # 1. Force HTTPS (also upgrades behind Hostinger's proxy)
   # ---------------------------------------------------------
   RewriteCond %{HTTPS} !=on [OR]
   RewriteCond %{HTTP:X-Forwarded-Proto} =http
-  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  RewriteRule ^ https://akfishers.com%{REQUEST_URI} [L,R=301]
 
   # ---------------------------------------------------------
-  # 2. www  ->  non-www   (canonical host: akfishers.com)
+  # 2. /index.html  or  /index  ->  /
+  # ---------------------------------------------------------
+  RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
+  RewriteRule ^ https://akfishers.com/ [L,R=301]
+
+  # ---------------------------------------------------------
+  # 3. /page.html  ->  /page   (single hop, forces canonical host)
+  # ---------------------------------------------------------
+  RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
+  RewriteRule ^ https://akfishers.com/%1 [L,R=301]
+
+  # ---------------------------------------------------------
+  # 4. Strip trailing slash, except the root
+  # ---------------------------------------------------------
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ https://akfishers.com/$1 [L,R=301]
+
+  # ---------------------------------------------------------
+  # 5. www  ->  non-www  (catch-all for anything not handled above)
   # ---------------------------------------------------------
   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
   RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
   # ---------------------------------------------------------
-  # 3. /index.html  (or /index)  ->  /
-  # ---------------------------------------------------------
-  RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
-  RewriteRule ^index(\.html)?$ / [L,R=301]
-
-  # ---------------------------------------------------------
-  # 4. Strip trailing slash (except the root)
-  # ---------------------------------------------------------
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.+?)/$ /$1 [L,R=301]
-
-  # ---------------------------------------------------------
-  # 5. /page.html  ->  /page      (visible 301)
-  # ---------------------------------------------------------
-  RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
-  RewriteRule ^ /%1 [L,R=301]
-
-  # ---------------------------------------------------------
-  # 6. Serve /page internally from /page.html
+  # 6. Serve /page internally from /page.html  (no redirect)
   # ---------------------------------------------------------
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
