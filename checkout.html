@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — AK Fishers</title>
+  <meta name="description" content="Complete your fresh seafood order — delivery details, slots and payment.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Checkout</h1>
+        <p>Almost there — tell us where to deliver your fresh catch.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:30px">
+      <div class="container">
+        <div class="breadcrumbs">
+          <a href="index.html">Home</a><span class="sep">›</span><a href="cart.html">Cart</a><span class="sep">›</span><span>Checkout</span>
+        </div>
+
+        <div class="checkout-layout" id="checkoutLayout"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <!-- Order success modal -->
+  <div class="modal-backdrop" id="successModal">
+    <div class="modal" style="text-align:center">
+      <div style="width:76px;height:76px;border-radius:50%;background:var(--sea-green-soft);color:var(--sea-green-dark);display:grid;place-items:center;margin:0 auto 18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h3>Order Placed Successfully!</h3>
+      <p class="modal-sub">Your fresh seafood order <b id="orderId">#AKF-0000</b> is confirmed.<br>We'll call you shortly to confirm the delivery slot.</p>
+      <div style="background:var(--off-white);border-radius:var(--r-md);padding:14px;font-size:13.5px;color:var(--ink-soft);margin-bottom:20px">
+        Expected delivery: <b id="orderDate"></b> · <span id="orderSlot"></span><br>
+        Payment: <b id="orderPay"></b>
+      </div>
+      <a class="btn btn--primary btn--block" href="account.html#orders">Track My Order</a>
+      <a class="btn btn--ghost btn--block mt-8" href="shop.html">Continue Shopping</a>
+    </div>
+  </div>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var items = AKF_CART.items();
+      if (!items.length) {
+        document.getElementById("checkoutLayout").innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1;border:1px solid var(--line-soft);border-radius:var(--r-lg)">' +
+            '<div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 7H6"/></svg></div>' +
+            '<h3>Your cart is empty</h3><p>Add some fresh seafood before checking out.</p>' +
+            '<a class="btn btn--primary" href="shop.html">Shop Fresh Seafood</a>' +
+          '</div>';
+        return;
+      }
+
+      var subtotal = AKF_CART.subtotal();
+
+      var appliedCoupon = null;
+      try {
+        var sc = JSON.parse(localStorage.getItem("akf_coupon"));
+        if (sc && sc.code && subtotal >= (sc.min || 0)) appliedCoupon = sc;
+        else localStorage.removeItem("akf_coupon");
+      } catch (e) {}
+
+      function couponDiscount() {
+        if (!appliedCoupon) return 0;
+        return appliedCoupon.type === "percent"
+          ? Math.round(subtotal * appliedCoupon.value / 100)
+          : Math.min(appliedCoupon.value, subtotal);
+      }
+
+      var discount = couponDiscount();
+
+      function baseDeliveryCharge() {
+        if (subtotal >= 999) return 0;
+        var savedPin = localStorage.getItem("akf_pincode");
+        var savedArea = savedPin ? akfFindArea(savedPin) : null;
+        return savedArea ? savedArea.charge : 49;
+      }
+
+      var delivery = baseDeliveryCharge();
+      var total = subtotal - discount + delivery;
+
+      var selDate = "";
+      var selSlot = "";
+      var selPay = "online";
+
+      function initDefaults() {
+        if (!selDate) {
+          var firstDate = document.querySelector("#dateGrid [data-date]");
+          if (firstDate) selDate = firstDate.getAttribute("data-date");
+        }
+        if (!selSlot) {
+          var firstSlot = document.querySelector("#slotGrid [data-slot]");
+          if (firstSlot) selSlot = firstSlot.getAttribute("data-slot");
+        }
+      }
+
+      function deliveryCharge() {
+        var pin = document.getElementById("pin").value.trim();
+        var area = pin ? akfFindArea(pin) : null;
+        if (area) {
+          var ch = subtotal >= 999 ? 0 : area.charge;
+          return ch;
+        }
+        return subtotal >= 999 ? 0 : 49;
+      }
+
+      function nextDates(n) {
+        var out = [];
+        var d = new Date();
+        for (var i = 0; i < n; i++) {
+          d.setDate(d.getDate() + 1);
+          var opts = { weekday: "short", day: "numeric", month: "short" };
+          var iso = d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0");
+          out.push({ iso: iso, label: d.toLocaleDateString("en-IN", opts) });
+        }
+        return out;
+      }
+
+      function render() {
+        var layout = document.getElementById("checkoutLayout");
+        var dates = nextDates(5);
+        var user = AKF_USER.get();
+
+        layout.innerHTML =
+          '<div>' +
+            '<div class="checkout-card">' +
+              '<h3><span class="cc-num">1</span> Customer Details</h3>' +
+              '<div class="field-row">' +
+                '<div class="field"><label>Full Name <span class="req">*</span></label><input id="fullName" placeholder="e.g. Rahul Sharma" value="' + (user ? user.name : "") + '"></div>' +
+                '<div class="field"><label>Mobile Number <span class="req">*</span></label><input id="mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" value="' + (user ? user.mobile : "") + '"></div>' +
+              '</div>' +
+              '<div class="field"><label>Email (optional)</label><input id="email" type="email" placeholder="you@example.com" value="' + (user ? user.email : "") + '"></div>' +
+            '</div>' +
+
+            '<div class="checkout-card">' +
+              '<h3><span class="cc-num">2</span> Delivery Address</h3>' +
+              '<div class="field"><label>House / Flat No. <span class="req">*</span></label><input id="flat" placeholder="e.g. 402, Sea Breeze Apartments"></div>' +
+              '<div class="field"><label>Building / Society <span class="req">*</span></label><input id="building" placeholder="e.g. Building name, wing"></div>' +
+              '<div class="field"><label>Area / Locality <span class="req">*</span></label><input id="area" placeholder="e.g. Linking Road, Bandra West"></div>' +
+              '<div class="field-row field-row--3">' +
+                '<div class="field"><label>City <span class="req">*</span></label><input id="city" value="Mumbai"></div>' +
+                '<div class="field"><label>State <span class="req">*</span></label><input id="state" value="Maharashtra"></div>' +
+                '<div class="field"><label>Pincode <span class="req">*</span></label><input id="pin" inputmode="numeric" maxlength="6" placeholder="400050" value="' + (localStorage.getItem("akf_pincode") || "") + '"></div>' +
+              '</div>' +
+              '<div class="pincode-result" id="pinMsg"></div>' +
+            '</div>' +
+
+            '<div class="checkout-card">' +
+              '<h3><span class="cc-num">3</span> Delivery Date &amp; Slot</h3>' +
+              '<div class="field"><label>Delivery Date <span class="req">*</span></label>' +
+                '<div class="slot-grid" id="dateGrid">' +
+                  dates.map(function (d, i) {
+                    return '<div class="slot-pill ' + (i === 0 ? "active" : "") + '" data-date="' + d.iso + '"><div class="sp-time">' + d.label + '</div><div class="sp-tag">' + (i === 0 ? "Tomorrow" : i === 1 ? "Day after" : "") + '</div></div>';
+                  }).join("") +
+                '</div>' +
+              '</div>' +
+              '<div class="field"><label>Delivery Slot <span class="req">*</span></label>' +
+                '<div class="slot-grid" id="slotGrid">' +
+                  '<div class="slot-pill active" data-slot="7 AM – 11 AM"><div class="sp-time">7 AM – 11 AM</div><div class="sp-tag">Morning</div></div>' +
+                  '<div class="slot-pill" data-slot="11 AM – 3 PM"><div class="sp-time">11 AM – 3 PM</div><div class="sp-tag">Afternoon</div></div>' +
+                  '<div class="slot-pill" data-slot="3 PM – 7 PM"><div class="sp-time">3 PM – 7 PM</div><div class="sp-tag">Evening</div></div>' +
+                  '<div class="slot-pill" data-slot="7 PM – 10 PM"><div class="sp-time">7 PM – 10 PM</div><div class="sp-tag">Night</div></div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="cs-note">⏰ Orders are prepared fresh for your selected date — please order at least 1 day in advance. Advance orders for festivals &amp; bulk are welcome.</div>' +
+            '</div>' +
+
+            '<div class="checkout-card">' +
+              '<h3><span class="cc-num">4</span> Payment Method</h3>' +
+              '<div class="pay-options">' +
+                '<div class="pay-option active" data-pay="online">' +
+                  '<span class="po-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg></span>' +
+                  '<span><b>Online Payment</b><span>UPI · Cards · Net Banking</span></span>' +
+                '</div>' +
+                '<div class="pay-option" data-pay="cod">' +
+                  '<span class="po-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></span>' +
+                  '<span><b>Cash On Delivery</b><span>Pay when you receive</span></span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<aside class="cart-summary">' +
+            '<h3>Order Summary</h3>' +
+            '<div class="order-summary-items">' +
+              items.map(function (x) {
+                var w = x.item.weight;
+                var wl = w >= 1000 ? (w / 1000) + " kg" : w + " g";
+                return '<div class="os-item">' +
+                  '<img src="' + x.product.img + '" alt="">' +
+                  '<div><div class="osi-name">' + x.product.name + '</div>' +
+                  '<div class="osi-meta">' + wl + ' · ' + x.item.cut + ' · Qty ' + x.item.qty + '</div></div>' +
+                  '<span class="osi-price">' + akfFormatINR(x.lineTotal) + '</span>' +
+                '</div>';
+              }).join("") +
+            '</div>' +
+            '<div class="cs-row" style="margin-top:10px"><span>Subtotal</span><span>' + akfFormatINR(subtotal) + '</span></div>' +
+            (discount ? '<div class="cs-row cs-free"><span>Coupon ' + appliedCoupon.code + '</span><span>− ' + akfFormatINR(discount) + '</span></div>' : '') +
+            '<div class="cs-row" id="deliveryRow"><span>Delivery Charges</span><span id="deliveryVal">' + (delivery === 0 ? "FREE" : akfFormatINR(delivery)) + '</span></div>' +
+            '<div class="cs-row cs-total"><span>Total</span><span id="totalVal">' + akfFormatINR(total) + '</span></div>' +
+            '<button class="btn btn--primary btn--block mt-16" id="placeOrder">Place Order · ' + akfFormatINR(total) + '</button>' +
+            '<div class="cs-note" style="margin-top:12px">🔒 Your details are secure. We never share your information.</div>' +
+          '</aside>';
+      }
+
+      // Date selection
+      document.getElementById("checkoutLayout").addEventListener("click", function (e) {
+        var dateEl = e.target.closest("[data-date]");
+        if (dateEl) {
+          selDate = dateEl.getAttribute("data-date");
+          document.querySelectorAll("[data-date]").forEach(function (x) { x.classList.remove("active"); });
+          dateEl.classList.add("active");
+          return;
+        }
+        var slotEl = e.target.closest("[data-slot]");
+        if (slotEl) {
+          selSlot = slotEl.getAttribute("data-slot");
+          document.querySelectorAll("[data-slot]").forEach(function (x) { x.classList.remove("active"); });
+          slotEl.classList.add("active");
+          return;
+        }
+        var payEl = e.target.closest("[data-pay]");
+        if (payEl) {
+          selPay = payEl.getAttribute("data-pay");
+          document.querySelectorAll("[data-pay]").forEach(function (x) { x.classList.remove("active"); });
+          payEl.classList.add("active");
+          return;
+        }
+        if (e.target.closest("#placeOrder")) placeOrder();
+      });
+
+      // Pincode live check
+      document.getElementById("checkoutLayout").addEventListener("input", function (e) {
+        if (e.target.id === "pin") {
+          var val = e.target.value.trim();
+          var msg = document.getElementById("pinMsg");
+          if (/^\d{6}$/.test(val)) {
+            var area = akfFindArea(val);
+            if (area) {
+              msg.className = "pincode-result ok";
+              msg.textContent = "✓ Delivery available in " + area.area;
+              var ch = subtotal >= 999 ? 0 : area.charge;
+              delivery = ch;
+              total = subtotal - discount + ch;
+              document.getElementById("deliveryVal").textContent = ch === 0 ? "FREE" : akfFormatINR(ch);
+              document.getElementById("totalVal").textContent = akfFormatINR(total);
+              var pob = document.getElementById("placeOrder");
+              if (pob) pob.textContent = "Place Order · " + akfFormatINR(total);
+              localStorage.setItem("akf_pincode", val);
+            } else {
+              msg.className = "pincode-result no";
+              msg.textContent = "Sorry, we don't deliver to this pincode yet.";
+            }
+          } else {
+            msg.className = "pincode-result";
+            msg.textContent = "";
+          }
+        }
+      });
+
+      function placeOrder() {
+        var name = document.getElementById("fullName").value.trim();
+        var mobile = document.getElementById("mobile").value.trim();
+        var flat = document.getElementById("flat").value.trim();
+        var building = document.getElementById("building").value.trim();
+        var area = document.getElementById("area").value.trim();
+        var pin = document.getElementById("pin").value.trim();
+
+        if (!name || !mobile || !flat || !building || !area || !pin) {
+          AKF_TOAST("Please fill all required fields", "error");
+          return;
+        }
+        if (!/^\d{10}$/.test(mobile)) {
+          AKF_TOAST("Enter a valid 10-digit mobile number", "error");
+          return;
+        }
+        if (!/^\d{6}$/.test(pin)) {
+          AKF_TOAST("Enter a valid 6-digit pincode", "error");
+          return;
+        }
+        var areaInfo = akfFindArea(pin);
+        if (!areaInfo) {
+          AKF_TOAST("We don't deliver to this pincode yet", "error");
+          return;
+        }
+        if (!selDate) {
+          AKF_TOAST("Please select a delivery date", "error");
+          return;
+        }
+        if (!selSlot) {
+          AKF_TOAST("Please select a delivery slot", "error");
+          return;
+        }
+
+        // Save order
+        var orderId = "AKF-" + Math.floor(1000 + Math.random() * 9000);
+        var orders = [];
+        try { orders = JSON.parse(localStorage.getItem("akf_orders")) || []; } catch (err) {}
+        orders.unshift({
+          id: orderId,
+          date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+          items: items.map(function (x) {
+            return { id: x.product.id, name: x.product.name, img: x.product.img, weight: x.item.weight, cut: x.item.cut, qty: x.item.qty, price: x.lineTotal };
+          }),
+          subtotal: subtotal,
+          discount: discount,
+          coupon: appliedCoupon ? appliedCoupon.code : "",
+          deliveryCharge: subtotal >= 999 ? 0 : areaInfo.charge,
+          total: subtotal - discount + (subtotal >= 999 ? 0 : areaInfo.charge),
+          status: "confirmed",
+          deliveryDate: selDate,
+          slot: selSlot,
+          payment: selPay === "online" ? "Online Payment" : "Cash On Delivery",
+          address: flat + ", " + building + ", " + area + ", Mumbai, Maharashtra " + pin,
+          name: name, mobile: mobile
+        });
+        localStorage.setItem("akf_orders", JSON.stringify(orders));
+        localStorage.removeItem("akf_coupon");
+
+        // Save user
+        AKF_USER.set({ name: name, mobile: mobile, email: document.getElementById("email").value.trim() });
+
+        // Show success
+        document.getElementById("orderId").textContent = "#" + orderId;
+        document.getElementById("orderDate").textContent = new Date(selDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+        document.getElementById("orderSlot").textContent = selSlot;
+        document.getElementById("orderPay").textContent = selPay === "online" ? "Online Payment" : "Cash On Delivery";
+        document.getElementById("successModal").classList.add("open");
+
+        AKF_CART.clear();
+      }
+
+      document.getElementById("successModal").addEventListener("click", function (e) {
+        if (e.target === this) this.classList.remove("open");
+      });
+
+      render();
+      initDefaults();
+    })();
+  </script>
+</body>
+</html>

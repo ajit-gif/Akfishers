@@ -1,0 +1,78 @@
+/* ============================================================
+   AK FISHERS — Homepage styles
+   ============================================================ */
+
+/* Category strip under hero */
+.cat-strip { background: #fff; border-bottom: 1px solid var(--line-soft); }
+.cat-strip-inner { display: flex; gap: 8px; overflow-x: auto; padding: 14px 0; scrollbar-width: none; }
+.cat-strip-inner::-webkit-scrollbar { display: none; }
+.cat-strip-inner a {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+  padding: 9px 16px; border: 1.5px solid var(--line); border-radius: var(--r-pill);
+  transition: all 0.16s ease; background: #fff;
+}
+.cat-strip-inner a:hover { border-color: var(--ocean-400); color: var(--ocean-600); background: var(--ocean-50); }
+.cat-strip-inner a img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+
+/* Best sellers header row */
+.bs-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 32px; flex-wrap: wrap; }
+.bs-head .section-head { margin-bottom: 0; }
+
+/* Freshness promise — ocean band */
+.promise-band { background: var(--ocean-900); border-radius: var(--r-xl); padding: 56px 50px; position: relative; overflow: hidden; }
+.promise-band::before { content: ""; position: absolute; left: -80px; top: -80px; width: 300px; height: 300px; border-radius: 50%; background: rgba(34,184,224,0.08); }
+.promise-band::after { content: ""; position: absolute; right: -60px; bottom: -100px; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+.promise-band .section-head h2 { color: #fff; }
+.promise-band .section-head p { color: #a9c6d8; }
+.promise-band .promise-grid { position: relative; z-index: 1; }
+.promise-band .promise-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(6px); }
+.promise-band .promise-card .pc-icon { background: rgba(34,184,224,0.16); color: var(--aqua); }
+.promise-band .promise-card h3 { color: #fff; }
+.promise-band .promise-card p { color: #a9c6d8; }
+
+/* How it works */
+.steps-wrap { position: relative; }
+.steps-line { position: absolute; top: 64px; left: 8%; right: 8%; height: 2px; background: repeating-linear-gradient(90deg, var(--ocean-200) 0 8px, transparent 8px 16px); z-index: 0; }
+.steps { position: relative; z-index: 1; }
+
+/* Why choose — split layout */
+.why-split { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 44px; align-items: center; }
+.why-media { position: relative; border-radius: var(--r-xl); overflow: hidden; aspect-ratio: 4 / 4.4; box-shadow: var(--shadow-lg); }
+.why-media img { width: 100%; height: 100%; object-fit: cover; }
+.why-media .wm-badge {
+  position: absolute; bottom: 20px; left: 20px; right: 20px;
+  background: rgba(255,255,255,0.94); border-radius: var(--r-lg); padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-md);
+}
+.why-media .wm-badge .wmb-icon { width: 46px; height: 46px; border-radius: 13px; background: var(--sea-green-soft); color: var(--sea-green-dark); display: grid; place-items: center; flex-shrink: 0; }
+.why-media .wm-badge b { display: block; font-size: 14.5px; }
+.why-media .wm-badge span { font-size: 12.5px; color: var(--muted); }
+
+/* Testimonials */
+.testi-band { background: var(--off-white); }
+.testi-card .t-quote { font-family: var(--font-display); font-size: 40px; line-height: 0.6; color: var(--ocean-200); }
+
+/* Delivery banner */
+.delivery-section { padding-bottom: 80px; }
+
+/* App / WhatsApp strip */
+.app-strip { background: var(--sea-green-soft); border-radius: var(--r-xl); padding: 34px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.app-strip .as-icon { width: 56px; height: 56px; border-radius: 16px; background: var(--sea-green); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+.app-strip h3 { font-size: 20px; }
+.app-strip p { color: var(--ink-soft); font-size: 14px; margin-top: 4px; }
+
+@media (max-width: 1040px) {
+  .why-split { grid-template-columns: 1fr; gap: 34px; }
+  .why-media { max-width: 520px; }
+}
+
+@media (max-width: 900px) {
+  .promise-band { padding: 40px 26px; }
+  .steps-line { display: none; }
+}
+
+@media (max-width: 640px) {
+  .promise-band { border-radius: var(--r-lg); }
+  .app-strip { padding: 26px 22px; }
+}

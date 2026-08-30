@@ -1,0 +1,30 @@
+/* ============================================================
+   AK FISHERS — Shop page styles
+   ============================================================ */
+
+.shop-section { padding: 30px 0 80px; }
+
+/* Active filter chips row */
+.active-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.active-filters .chip { font-size: 12.5px; padding: 6px 12px; }
+.active-filters .chip .x { margin-left: 6px; color: var(--muted); font-weight: 800; }
+
+/* Price range display */
+.price-range-display { font-size: 13px; font-weight: 700; color: var(--ocean-600); margin-top: 8px; }
+
+/* Range slider */
+input[type="range"] { width: 100%; accent-color: var(--ocean-600); height: 5px; }
+
+/* Sort select wrapper */
+.sort-wrap { display: flex; align-items: center; gap: 10px; }
+.sort-wrap label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* Mobile filter drawer header */
+.filter-head { display: none; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.filter-head h3 { font-size: 18px; }
+
+@media (max-width: 900px) {
+  .filter-head { display: flex; }
+  .filter-panel .filter-actions { display: flex; }
+  .filter-panel .filter-actions .btn { flex: 1; }
+}

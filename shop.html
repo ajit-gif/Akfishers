@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Fresh Seafood — AK Fishers</title>
+  <meta name="description" content="Browse fresh fish, prawns, crabs and ready-to-cook seafood. Filter by category, price and availability. Fresh delivery across Mumbai.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+  <link rel="stylesheet" href="styles/shop.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Shop Fresh Seafood</h1>
+        <p>Fresh fish, prawns, crabs and shellfish — cleaned, packed and delivered across Mumbai. Prices shown are indicative per-kg ranges; final rate is confirmed on your order.</p>
+        <div class="ph-meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Daily fresh catch</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Free delivery above ₹999</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Order 1 day in advance</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="shop-section">
+      <div class="container">
+        <div class="breadcrumbs">
+          <a href="index.html">Home</a><span class="sep">›</span><span>Shop</span>
+        </div>
+
+        <div class="shop-layout">
+          <!-- ============ FILTERS ============ -->
+          <aside class="filter-panel" id="filterPanel">
+            <div class="filter-head">
+              <h3>Filters</h3>
+              <button class="mm-close" data-close-filters aria-label="Close filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="filter-group">
+              <h4>Categories</h4>
+              <label class="f-item"><input type="checkbox" data-cat="all" checked> All Categories <span class="f-count" id="allCatCount"></span></label>
+              <div id="catFilters"></div>
+            </div>
+
+            <div class="filter-group">
+              <h4>Starting Price</h4>
+              <input type="range" min="0" max="3000" step="100" value="3000" id="priceRange">
+              <div class="price-range-display" id="priceDisplay">Any price</div>
+            </div>
+
+            <div class="filter-group">
+              <h4>Availability</h4>
+              <label class="f-item"><input type="checkbox" id="inStockOnly"> In Stock Only</label>
+            </div>
+
+            <div class="filter-actions">
+              <button class="btn btn--primary btn--sm" id="applyFilters">Apply Filters</button>
+              <button class="btn btn--ghost btn--sm" id="clearFilters">Clear All</button>
+            </div>
+          </aside>
+
+          <!-- ============ PRODUCTS ============ -->
+          <div>
+            <div class="shop-toolbar">
+              <div class="st-left">
+                <button class="btn btn--ghost btn--sm mobile-filter-btn" id="openFilters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:16px;height:16px"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></svg>
+                  Filters
+                </button>
+                <span class="st-count"><b id="resultCount">—</b> products</span>
+              </div>
+              <div class="sort-wrap">
+                <label for="sortSelect">Sort by</label>
+                <select id="sortSelect">
+                  <option value="popular">Popularity</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="name">Name: A–Z</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="active-filters" id="activeFilters"></div>
+
+            <div class="product-grid" id="productGrid"></div>
+            <div class="empty-state hidden" id="emptyState">
+              <div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+              <h3>No products found</h3>
+              <p>Try adjusting your filters or search for something else.</p>
+              <button class="btn btn--primary" id="emptyReset">Clear All Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var PRICE_MAX = 3000;
+
+      /* ---------- State ---------- */
+      var state = {
+        cats: {},        // catId -> bool
+        maxPrice: PRICE_MAX,
+        inStock: false,
+        sort: "popular",
+        q: ""
+      };
+
+      var params = new URLSearchParams(window.location.search);
+      state.q = params.get("q") || "";
+      var catParam = params.get("cat");
+      var sortParam = params.get("sort");
+
+      /* ---------- Build category filters ---------- */
+      document.getElementById("allCatCount").textContent = AKF_PRODUCTS.length;
+      var catFilters = document.getElementById("catFilters");
+      catFilters.innerHTML = AKF_CATEGORIES.map(function (c) {
+        return '<label class="f-item"><input type="checkbox" data-cat="' + c.id + '"> ' + akfEscapeHTML(c.name) +
+          ' <span class="f-count">' + akfCategoryCount(c.id) + '</span></label>';
+      }).join("");
+
+      if (catParam) {
+        state.cats[catParam] = true;
+        document.querySelectorAll("[data-cat]").forEach(function (cb) {
+          cb.checked = cb.getAttribute("data-cat") === catParam;
+        });
+      }
+
+      /* ---------- Render ---------- */
+      function filtered() {
+        var list = AKF_PRODUCTS.slice();
+
+        // Category filter
+        var activeCats = Object.keys(state.cats).filter(function (k) { return state.cats[k]; });
+        if (activeCats.length) {
+          list = list.filter(function (p) { return activeCats.indexOf(p.category) > -1; });
+        }
+
+        // Price
+        list = list.filter(function (p) { return p.price <= state.maxPrice; });
+
+        // Availability
+        if (state.inStock) list = list.filter(function (p) { return p.stock > 0; });
+
+        // Search
+        if (state.q) {
+          var q = state.q.toLowerCase();
+          list = list.filter(function (p) {
+            return p.name.toLowerCase().indexOf(q) > -1 || p.marathi.indexOf(state.q) > -1 || p.desc.toLowerCase().indexOf(q) > -1;
+          });
+        }
+
+        // Sort
+        switch (state.sort) {
+          case "price-asc": list.sort(function (a, b) { return a.price - b.price; }); break;
+          case "price-desc": list.sort(function (a, b) { return b.price - a.price; }); break;
+          case "name": list.sort(function (a, b) { return a.name.localeCompare(b.name); }); break;
+          default: list.sort(function (a, b) { return (b.badge === "bestseller" ? 1 : 0) - (a.badge === "bestseller" ? 1 : 0); });
+        }
+        return list;
+      }
+
+      function render() {
+        var list = filtered();
+        var grid = document.getElementById("productGrid");
+        var empty = document.getElementById("emptyState");
+        document.getElementById("resultCount").textContent = list.length;
+
+        if (!list.length) {
+          grid.innerHTML = "";
+          empty.classList.remove("hidden");
+        } else {
+          empty.classList.add("hidden");
+          grid.innerHTML = list.map(akfProductCardHTML).join("");
+        }
+
+        // Active filter chips
+        var chips = document.getElementById("activeFilters");
+        var html = "";
+        if (state.q) html += '<span class="chip">Search: "' + akfEscapeHTML(state.q) + '" <span class="x" data-remove="q">×</span></span>';
+        Object.keys(state.cats).forEach(function (k) {
+          if (state.cats[k]) {
+            var c = AKF_CATEGORIES.find(function (x) { return x.id === k; });
+            if (c) html += '<span class="chip">' + akfEscapeHTML(c.name) + ' <span class="x" data-remove="cat:' + k + '">×</span></span>';
+          }
+        });
+        if (state.maxPrice < PRICE_MAX) html += '<span class="chip">From under ' + akfFormatINR(state.maxPrice) + ' <span class="x" data-remove="price">×</span></span>';
+        if (state.inStock) html += '<span class="chip">In Stock <span class="x" data-remove="stock">×</span></span>';
+        chips.innerHTML = html;
+      }
+
+      /* ---------- Events ---------- */
+      document.getElementById("applyFilters").addEventListener("click", function () {
+        state.cats = {};
+        document.querySelectorAll("[data-cat]").forEach(function (cb) {
+          if (cb.checked && cb.getAttribute("data-cat") !== "all") state.cats[cb.getAttribute("data-cat")] = true;
+        });
+        state.maxPrice = parseInt(document.getElementById("priceRange").value, 10);
+        state.inStock = document.getElementById("inStockOnly").checked;
+        render();
+        closeFilters();
+      });
+
+      document.getElementById("clearFilters").addEventListener("click", function () {
+        state = { cats: {}, maxPrice: PRICE_MAX, inStock: false, sort: state.sort, q: state.q };
+        document.querySelectorAll("[data-cat]").forEach(function (cb) { cb.checked = cb.getAttribute("data-cat") === "all"; });
+        document.getElementById("priceRange").value = PRICE_MAX;
+        document.getElementById("priceDisplay").textContent = "Any price";
+        document.getElementById("inStockOnly").checked = false;
+        render();
+      });
+
+      document.getElementById("emptyReset").addEventListener("click", function () {
+        document.getElementById("clearFilters").click();
+      });
+
+      document.getElementById("sortSelect").addEventListener("change", function () {
+        state.sort = this.value;
+        render();
+      });
+
+      var priceRange = document.getElementById("priceRange");
+      var priceDisplay = document.getElementById("priceDisplay");
+      priceRange.addEventListener("input", function () {
+        priceDisplay.textContent = parseInt(this.value, 10) >= PRICE_MAX
+          ? "Any price"
+          : "Starting under " + akfFormatINR(this.value) + " / kg";
+      });
+
+      // Chip removal
+      document.getElementById("activeFilters").addEventListener("click", function (e) {
+        var x = e.target.closest("[data-remove]");
+        if (!x) return;
+        var key = x.getAttribute("data-remove");
+        if (key === "q") { state.q = ""; }
+        else if (key === "price") { state.maxPrice = PRICE_MAX; document.getElementById("priceRange").value = PRICE_MAX; priceDisplay.textContent = "Any price"; }
+        else if (key === "stock") { state.inStock = false; document.getElementById("inStockOnly").checked = false; }
+        else if (key.indexOf("cat:") === 0) {
+          var cid = key.split(":")[1];
+          state.cats[cid] = false;
+          document.querySelectorAll('[data-cat="' + cid + '"]').forEach(function (cb) { cb.checked = false; });
+        }
+        render();
+      });
+
+      // Mobile filters
+      var panel = document.getElementById("filterPanel");
+      function openFilters() { panel.classList.add("open"); document.body.style.overflow = "hidden"; }
+      function closeFilters() { panel.classList.remove("open"); document.body.style.overflow = ""; }
+      document.getElementById("openFilters").addEventListener("click", openFilters);
+      document.querySelector("[data-close-filters]").addEventListener("click", closeFilters);
+
+      // Initial sort from URL
+      if (["popular", "price-asc", "price-desc", "name"].indexOf(sortParam) > -1) state.sort = sortParam;
+      document.getElementById("sortSelect").value = state.sort;
+
+      render();
+    })();
+  </script>
+</body>
+</html>

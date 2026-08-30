@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart — AK Fishers</title>
+  <meta name="description" content="Review your fresh seafood order — weights, cutting preferences and delivery charges.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Your Cart</h1>
+        <p>Fresh seafood, ready to be cleaned, packed and delivered.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:30px">
+      <div class="container">
+        <div class="breadcrumbs">
+          <a href="index.html">Home</a><span class="sep">›</span><a href="shop.html">Shop</a><span class="sep">›</span><span>Cart</span>
+        </div>
+
+        <div class="cart-layout" id="cartLayout"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var appliedCoupon = null;
+      try {
+        var savedCoupon = JSON.parse(localStorage.getItem("akf_coupon"));
+        if (savedCoupon && savedCoupon.code) appliedCoupon = savedCoupon;
+      } catch (e) {}
+
+      function deliveryCharge(subtotal) {
+        if (subtotal >= 999) return 0;
+        var pin = localStorage.getItem("akf_pincode");
+        var area = pin ? akfFindArea(pin) : null;
+        return area ? area.charge : 49;
+      }
+
+      function render() {
+        var layout = document.getElementById("cartLayout");
+        var items = AKF_CART.items();
+
+        if (!items.length) {
+          layout.innerHTML =
+            '<div class="empty-state" style="grid-column:1/-1;border:1px solid var(--line-soft);border-radius:var(--r-lg)">' +
+              '<div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 7H6"/></svg></div>' +
+              '<h3>Your cart is empty</h3>' +
+              '<p>Fresh seafood is waiting. Explore our daily catch and add your favourites.</p>' +
+              '<a class="btn btn--primary" href="shop.html">Shop Fresh Seafood</a>' +
+            '</div>';
+          return;
+        }
+
+        var subtotal = AKF_CART.subtotal();
+        var delivery = deliveryCharge(subtotal);
+        var discount = 0;
+        var couponHTML = "";
+
+        if (appliedCoupon && subtotal < (appliedCoupon.min || 0)) {
+          appliedCoupon = null;
+          localStorage.removeItem("akf_coupon");
+        }
+
+        if (appliedCoupon) {
+          discount = appliedCoupon.type === "percent"
+            ? Math.round(subtotal * appliedCoupon.value / 100)
+            : Math.min(appliedCoupon.value, subtotal);
+          couponHTML =
+            '<div class="coupon-applied"><span>Coupon ' + appliedCoupon.code + ' applied — you saved ' + akfFormatINR(discount) + '</span>' +
+            '<button data-remove-coupon>Remove</button></div>';
+        }
+
+        var total = subtotal - discount + delivery;
+
+        layout.innerHTML =
+          '<div class="cart-items">' +
+            items.map(function (x) {
+              var w = x.item.weight;
+              var weightLabel = w >= 1000 ? (w / 1000) + " kg" : w + " g";
+              return '<div class="cart-item" data-key="' + x.item.id + '|' + x.item.weight + '|' + x.item.cut + '">' +
+                '<a href="product.html?id=' + x.product.id + '"><img src="' + x.product.img + '" alt="' + x.product.name + '"></a>' +
+                '<div>' +
+                  '<a class="ci-name" href="product.html?id=' + x.product.id + '">' + x.product.name + '</a>' +
+                  '<div class="ci-meta">' +
+                    '<span class="cm-tag">' + weightLabel + '</span>' +
+                    '<span class="cm-tag">' + x.item.cut + '</span>' +
+                    '<span class="cm-tag">' + x.product.marathi + '</span>' +
+                  '</div>' +
+                  '<div class="ci-price">' + akfFormatINR(x.lineTotal) + '</div>' +
+                '</div>' +
+                '<div class="ci-right">' +
+                  '<button class="ci-remove" data-remove="' + x.item.id + '|' + x.item.weight + '|' + x.item.cut + '">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>' +
+                    'Remove' +
+                  '</button>' +
+                  '<div class="qty-stepper">' +
+                    '<button data-qty="-1" data-key="' + x.item.id + '|' + x.item.weight + '|' + x.item.cut + '">−</button>' +
+                    '<span class="qty-val">' + x.item.qty + '</span>' +
+                    '<button data-qty="1" data-key="' + x.item.id + '|' + x.item.weight + '|' + x.item.cut + '">+</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            }).join("") +
+            '<div style="padding:18px 20px">' +
+              '<a class="btn btn--ghost btn--sm" href="shop.html">← Continue Shopping</a>' +
+            '</div>' +
+          '</div>' +
+
+          '<aside class="cart-summary">' +
+            '<h3>Order Summary</h3>' +
+            couponHTML +
+            '<div class="cs-coupon">' +
+              '<input type="text" placeholder="Enter coupon code" id="couponInput">' +
+              '<button class="btn btn--ghost btn--sm" id="applyCoupon">Apply</button>' +
+            '</div>' +
+            '<div class="cs-row"><span>Subtotal</span><span>' + akfFormatINR(subtotal) + '</span></div>' +
+            (discount ? '<div class="cs-row text-success"><span>Coupon Discount</span><span>− ' + akfFormatINR(discount) + '</span></div>' : '') +
+            '<div class="cs-row ' + (delivery === 0 ? "cs-free" : "") + '"><span>Delivery Charges</span><span>' + (delivery === 0 ? "FREE" : akfFormatINR(delivery)) + '</span></div>' +
+            '<div class="cs-row cs-total"><span>Total</span><span>' + akfFormatINR(total) + '</span></div>' +
+            (delivery > 0 ? '<div class="cs-note">Add ' + akfFormatINR(999 - subtotal) + ' more to get <b>FREE delivery</b> 🚚</div>' : '<div class="cs-note">🎉 You\'ve unlocked <b>FREE delivery</b> on this order!</div>') +
+            '<a class="btn btn--primary btn--block mt-16" href="checkout.html">Proceed To Checkout →</a>' +
+            '<div class="cs-note" style="margin-top:12px">💳 Secure payments · UPI, Cards, Net Banking &amp; COD available</div>' +
+          '</aside>';
+      }
+
+      document.addEventListener("click", function (e) {
+        var qtyBtn = e.target.closest("[data-qty][data-key]");
+        if (qtyBtn) {
+          var parts = qtyBtn.getAttribute("data-key").split("|");
+          var cart = AKF_CART.get();
+          var item = cart.find(function (i) { return i.id === parts[0] && String(i.weight) === parts[1] && i.cut === parts[2]; });
+          if (item) {
+            var newQty = item.qty + parseInt(qtyBtn.getAttribute("data-qty"), 10);
+            if (newQty < 1) return;
+            AKF_CART.updateQty(parts[0], parseInt(parts[1], 10), parts[2], newQty);
+            render();
+          }
+          return;
+        }
+
+        var rmBtn = e.target.closest("[data-remove]");
+        if (rmBtn) {
+          var rp = rmBtn.getAttribute("data-remove").split("|");
+          AKF_CART.remove(rp[0], parseInt(rp[1], 10), rp[2]);
+          AKF_TOAST("Item removed from cart", "info");
+          render();
+          return;
+        }
+
+        var rmCoupon = e.target.closest("[data-remove-coupon]");
+        if (rmCoupon) {
+          appliedCoupon = null;
+          localStorage.removeItem("akf_coupon");
+          render();
+        }
+      });
+
+      document.getElementById("cartLayout").addEventListener("click", function (e) {
+        var applyBtn = e.target.closest("#applyCoupon");
+        if (!applyBtn) return;
+        var code = document.getElementById("couponInput").value.trim().toUpperCase();
+        if (!code) { AKF_TOAST("Enter a coupon code", "error"); return; }
+        var coupon = AKF_COUPONS.find(function (c) { return c.code === code; });
+        if (!coupon) { AKF_TOAST("Invalid coupon code", "error"); return; }
+        var subtotal = AKF_CART.subtotal();
+        if (subtotal < coupon.min) {
+          AKF_TOAST("Add " + akfFormatINR(coupon.min - subtotal) + " more to use " + code, "error");
+          return;
+        }
+        appliedCoupon = coupon;
+        localStorage.setItem("akf_coupon", JSON.stringify(coupon));
+        AKF_TOAST("Coupon " + code + " applied!", "success");
+        render();
+      });
+
+      window.addEventListener("akf:cartchange", render);
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AK Fishers — Fresh Fish & Seafood Delivery in Mumbai</title>
+  <meta name="description" content="AK Fishers delivers fresh, hygienically cleaned fish and seafood across Mumbai. Pomfret, Surmai, Rawas, Prawns, Crabs & more — Fresh From The Sea To Your Doorstep.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+  <link rel="stylesheet" href="styles/home.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="hero-bg">
+        <img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=1800&q=80" alt="Fresh seafood display">
+      </div>
+      <div class="container">
+        <div class="hero-inner">
+          <span class="hero-kicker">🐟 Mumbai's Trusted Seafood Delivery</span>
+          <h1>Fresh Fish &amp; Seafood Delivered To Your <span class="accent">Doorstep</span></h1>
+          <p class="lead">Freshly sourced, hygienically cleaned and carefully packed seafood delivered with quality and care — from the Sassoon Dock catch to your kitchen.</p>
+          <div class="hero-ctas">
+            <a class="btn btn--aqua btn--lg" href="shop.html">Shop Fresh Seafood <span>→</span></a>
+            <a class="btn btn--outline-light btn--lg" href="#categories">Explore Categories</a>
+          </div>
+          <div class="hero-trust">
+            <span class="ht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Fresh Catch</span>
+            <span class="ht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Hygienically Cleaned</span>
+            <span class="ht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Quality Checked</span>
+            <span class="ht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Home Delivery</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hs"><b>Daily</b><span>Fresh Catch</span></div>
+        <div class="hs"><b>Mumbai</b><span>Doorstep Delivery</span></div>
+        <div class="hs"><b>1 Day</b><span>Advance Order</span></div>
+        <div class="hs"><b>Bulk</b><span>Orders Accepted</span></div>
+      </div>
+    </section>
+
+    <!-- ================= CATEGORY STRIP ================= -->
+    <div class="cat-strip">
+      <div class="container cat-strip-inner" id="catStrip"></div>
+    </div>
+
+    <!-- ================= SHOP BY CATEGORY ================= -->
+    <section class="section" id="categories">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Shop By Category</span>
+          <h2>Explore Our Fresh Seafood Range</h2>
+          <p>From everyday favourites to premium delicacies — every category sourced fresh from the coast.</p>
+        </div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+    </section>
+
+    <!-- ================= BEST SELLERS ================= -->
+    <section class="section section--tint">
+      <div class="container">
+        <div class="bs-head">
+          <div class="section-head">
+            <span class="eyebrow">Customer Favourites</span>
+            <h2>Best Sellers This Week</h2>
+            <p>The most-loved picks from our daily catch — the fish Mumbai kitchens ask for again and again.</p>
+          </div>
+          <a class="btn btn--outline" href="shop.html">View All Products <span>→</span></a>
+        </div>
+        <div class="product-grid" id="bestSellers"></div>
+      </div>
+    </section>
+
+    <!-- ================= FRESHNESS PROMISE ================= -->
+    <section class="section">
+      <div class="container">
+        <div class="promise-band">
+          <div class="section-head section-head--center">
+            <span class="eyebrow eyebrow--light">Our Promise</span>
+            <h2>Fresh From The Sea To Your Doorstep</h2>
+            <p>Every order follows a strict freshness journey — from the boat to your kitchen in under 24 hours.</p>
+          </div>
+          <div class="promise-grid">
+            <div class="promise-card">
+              <div class="pc-icon">🐟</div>
+              <h3>Freshly Sourced</h3>
+              <p>Daily catch from Sassoon Dock and the Konkan coast, selected at dawn for peak freshness.</p>
+            </div>
+            <div class="promise-card">
+              <div class="pc-icon">🔪</div>
+              <h3>Hygienically Cleaned</h3>
+              <p>Cleaned and cut in our sanitised facility with filtered water and food-grade tools.</p>
+            </div>
+            <div class="promise-card">
+              <div class="pc-icon">📦</div>
+              <h3>Carefully Packed</h3>
+              <p>Vacuum-sealed and ice-packed in insulated boxes to lock in freshness and flavour.</p>
+            </div>
+            <div class="promise-card">
+              <div class="pc-icon">🚚</div>
+              <h3>Delivered Fresh</h3>
+              <p>Temperature-controlled delivery across Mumbai, straight to your doorstep on time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= HOW IT WORKS ================= -->
+    <section class="section section--tint">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Simple &amp; Fresh</span>
+          <h2>How It Works</h2>
+          <p>Ordering fresh seafood has never been easier. Four simple steps to a perfect meal.</p>
+        </div>
+        <div class="steps-wrap">
+          <div class="steps-line"></div>
+          <div class="steps">
+            <div class="step-card">
+              <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C7 3 3.2 5.6 1.5 9.2c-.3.7-.3 1.5 0 2.2C3.2 15 7 17.6 12 17.6s8.8-2.6 10.5-6.2c.3-.7.3-1.5 0-2.2C20.8 5.6 17 3 12 3z"/></svg></div>
+              <h3>Choose Your Seafood</h3>
+              <p>Browse our daily fresh catalogue — pomfret, surmai, rawas, prawns, crabs, shellfish and local catch.</p>
+              <span class="step-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="step-card">
+              <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg></div>
+              <h3>Select Weight &amp; Cleaning</h3>
+              <p>Pick your weight — 250g to 2kg — and choose how you want it cleaned: whole, curry cut, steak or fillet.</p>
+              <span class="step-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="step-card">
+              <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+              <h3>We Clean &amp; Pack Fresh</h3>
+              <p>Our team cleans, cuts and vacuum-packs your order in insulated ice boxes within hours.</p>
+              <span class="step-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+            <div class="step-card">
+              <div class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+              <h3>Fresh Delivery To Your Door</h3>
+              <p>Choose a delivery slot and receive your order chilled, fresh and ready to cook.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= WHY CHOOSE AK FISHERS ================= -->
+    <section class="section">
+      <div class="container">
+        <div class="why-split">
+          <div class="why-media">
+            <img src="https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=1000&q=80" alt="Fresh fish being prepared hygienically">
+            <div class="wm-badge">
+              <span class="wmb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+              <span><b>Hygienically Cleaned</b><span>Filtered water · food-grade tools</span></span>
+            </div>
+          </div>
+          <div>
+            <div class="section-head">
+              <span class="eyebrow">Why AK Fishers</span>
+              <h2>Why Choose AK Fishers?</h2>
+              <p>We built AK Fishers for seafood lovers who refuse to compromise on freshness, hygiene and taste.</p>
+            </div>
+            <div class="why-grid">
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C7 3 3.2 5.6 1.5 9.2c-.3.7-.3 1.5 0 2.2C3.2 15 7 17.6 12 17.6s8.8-2.6 10.5-6.2c.3-.7.3-1.5 0-2.2C20.8 5.6 17 3 12 3z"/></svg></span>
+                <div><h3>Premium Quality Seafood</h3><p>Hand-picked catch graded for size, texture and freshness before it reaches you.</p></div>
+              </div>
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4 6l16 12M20 6L4 18"/></svg></span>
+                <div><h3>Fresh Daily Sourcing</h3><p>Direct from the Sassoon Dock auction at dawn — no middlemen, no cold storage delays.</p></div>
+              </div>
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l13.5-13.5a3.5 3.5 0 0 1 5 5L8 22H3v-5z"/></svg></span>
+                <div><h3>Hygienic Cleaning</h3><p>Cleaned with filtered water in a sanitised facility, exactly to your cutting preference.</p></div>
+              </div>
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>
+                <div><h3>Expert Packaging</h3><p>Vacuum-sealed and ice-packed in food-grade insulated boxes for zero leakage.</p></div>
+              </div>
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+                <div><h3>Convenient Home Delivery</h3><p>Choose your delivery slot — morning or evening — across 60+ Mumbai areas.</p></div>
+              </div>
+              <div class="why-card">
+                <span class="wc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+                <div><h3>Trusted Local Supplier</h3><p>A registered Mumbai seafood supplier (AK Fishers Supplier LLP) with top-rated Google reviews for freshness and hygiene.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CUSTOMER REVIEWS ================= -->
+    <section class="section testi-band">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Customer Reviews</span>
+          <h2>Loved By Mumbai Families</h2>
+          <p>Real reviews from real customers who trust AK Fishers for their weekly seafood.</p>
+        </div>
+        <div class="testi-grid" id="testiGrid"></div>
+      </div>
+    </section>
+
+    <!-- ================= DELIVERY INFORMATION ================= -->
+    <section class="section delivery-section">
+      <div class="container">
+        <div class="delivery-banner">
+          <div class="db-content">
+            <h2>Fresh Seafood, Delivered Across Mumbai</h2>
+            <p>Same-day delivery in 60+ areas. Advance orders welcome for bulk and special requirements.</p>
+            <ul class="db-points">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Delivery Across Mumbai</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Advance Orders Accepted</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Bulk Orders Welcome</li>
+            </ul>
+          </div>
+          <div class="db-cta">
+            <div class="pincode-check">
+              <input type="text" inputmode="numeric" maxlength="6" placeholder="Enter pincode" id="pinCheck" aria-label="Enter pincode">
+              <button class="btn btn--aqua" id="pinCheckBtn">Check</button>
+            </div>
+            <div class="pincode-result" id="pinResult"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= WHATSAPP STRIP ================= -->
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="app-strip">
+          <div style="display:flex;align-items:center;gap:18px">
+            <span class="as-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.6c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg></span>
+            <div>
+              <h3>Order on WhatsApp</h3>
+              <p>Prefer to order directly? Message us your list and we'll confirm availability instantly.</p>
+            </div>
+          </div>
+          <a class="btn btn--primary" href="https://wa.me/918108106522?text=Hi%20AK%20Fishers!%20I%27d%20like%20to%20place%20an%20order." target="_blank" rel="noopener">Chat on WhatsApp</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    /* ---------- Homepage render ---------- */
+    (function () {
+      // Category strip
+      var strip = document.getElementById("catStrip");
+      if (strip) {
+        strip.innerHTML = AKF_CATEGORIES.map(function (c) {
+          return '<a href="shop.html?cat=' + c.id + '"><img src="' + c.img + '" alt="">' + c.name + '</a>';
+        }).join("");
+      }
+
+      // Category grid
+      var grid = document.getElementById("catGrid");
+      if (grid) {
+        grid.innerHTML = AKF_CATEGORIES.map(akfCategoryCardHTML).join("");
+      }
+
+      // Best sellers
+      var bs = document.getElementById("bestSellers");
+      if (bs) {
+        var best = AKF_PRODUCTS.filter(function (p) { return p.badge === "bestseller"; });
+        if (best.length < 8) {
+          best = best.concat(AKF_PRODUCTS.filter(function (p) { return p.badge !== "bestseller"; }));
+        }
+        bs.innerHTML = best.slice(0, 8).map(akfProductCardHTML).join("");
+      }
+
+      // Testimonials
+      var tg = document.getElementById("testiGrid");
+      if (tg) {
+        tg.innerHTML = AKF_TESTIMONIALS.map(function (t) {
+          return '<div class="testi-card">' +
+            '<span class="t-quote">"</span>' +
+            '<div class="t-stars">' + akfStars(t.rating) + '</div>' +
+            '<p class="t-text">' + t.text + '</p>' +
+            '<div class="t-person">' +
+              '<span class="t-avatar">' + t.name.charAt(0) + '</span>' +
+              '<span><span class="t-name">' + t.name + '</span><br><span class="t-area">' + t.area + '</span></span>' +
+              '<span class="t-verified" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified</span>' +
+            '</div>' +
+          '</div>';
+        }).join("");
+      }
+
+      // Pincode check
+      var pinBtn = document.getElementById("pinCheckBtn");
+      var pinInput = document.getElementById("pinCheck");
+      var pinResult = document.getElementById("pinResult");
+      function checkPin() {
+        var val = pinInput.value.trim();
+        if (!/^\d{6}$/.test(val)) {
+          pinResult.className = "pincode-result no";
+          pinResult.textContent = "Please enter a valid 6-digit pincode.";
+          return;
+        }
+        var area = akfFindArea(val);
+        if (area) {
+          pinResult.className = "pincode-result ok";
+          pinResult.innerHTML = "✓ Delivery available in " + area.area + " — charges " + akfFormatINR(area.charge) + " (free above ₹999)";
+          localStorage.setItem("akf_pincode", val);
+        } else {
+          pinResult.className = "pincode-result no";
+          pinResult.textContent = "Sorry, we don't deliver to this pincode yet. Check back soon!";
+        }
+      }
+      if (pinBtn) pinBtn.addEventListener("click", checkPin);
+      if (pinInput) pinInput.addEventListener("keydown", function (e) { if (e.key === "Enter") checkPin(); });
+    })();
+  </script>
+</body>
+</html>

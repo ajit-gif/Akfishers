@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — AK Fishers</title>
+  <meta name="description" content="Login, signup and manage your AK Fishers account — profile, addresses, orders and tracking.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main id="accountRoot"></main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var root = document.getElementById("accountRoot");
+      var user = AKF_USER.get();
+
+      /* ================= AUTH VIEW ================= */
+      function renderAuth(mode) {
+        mode = mode || "login";
+        root.innerHTML =
+          '<div class="auth-layout">' +
+            '<div class="auth-visual">' +
+              '<img src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=1200&q=80" alt="Fresh prawns">' +
+              '<div class="av-content">' +
+                '<h2>Fresh seafood, one login away</h2>' +
+                '<p>Track orders, save addresses, reorder favourites and get exclusive member offers.</p>' +
+                '<ul class="av-points">' +
+                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Order tracking &amp; history</li>' +
+                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Saved delivery addresses</li>' +
+                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Member-only coupons</li>' +
+                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> One-tap reorder</li>' +
+                '</ul>' +
+              '</div>' +
+            '</div>' +
+            '<div class="auth-form-wrap">' +
+              '<div class="auth-card">' +
+                (mode === "login" ? renderLogin() : mode === "signup" ? renderSignup() : renderForgot()) +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        bindAuth(mode);
+      }
+
+      function renderLogin() {
+        return '<h1>Welcome back</h1>' +
+          '<p class="auth-sub">Login to continue your fresh seafood journey.</p>' +
+          '<div class="field"><label>Mobile Number</label><input id="loginMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
+          '<div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Enter your password"></div>' +
+          '<button class="btn btn--primary btn--block" id="loginBtn">Login</button>' +
+          '<div class="auth-alt">Forgot password? <a href="#" data-mode="forgot">Reset here</a></div>' +
+          '<div class="auth-alt">New to AK Fishers? <a href="#" data-mode="signup">Create an account</a></div>';
+      }
+
+      function renderSignup() {
+        return '<h1>Create your account</h1>' +
+          '<p class="auth-sub">Fresh seafood delivered to your door across Mumbai.</p>' +
+          '<div class="field"><label>Full Name</label><input id="suName" placeholder="Your full name"></div>' +
+          '<div class="field"><label>Mobile Number</label><input id="suMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
+          '<div class="field"><label>Email (optional)</label><input id="suEmail" type="email" placeholder="you@example.com"></div>' +
+          '<div class="field"><label>Password</label><input id="suPass" type="password" placeholder="Min 6 characters"></div>' +
+          '<div class="field"><label>Confirm Password</label><input id="suPass2" type="password" placeholder="Re-enter password"></div>' +
+          '<button class="btn btn--primary btn--block" id="signupBtn">Create Account</button>' +
+          '<div class="auth-alt">Already have an account? <a href="#" data-mode="login">Login</a></div>';
+      }
+
+      function renderForgot() {
+        return '<h1>Reset password</h1>' +
+          '<p class="auth-sub">Enter your mobile number and we\'ll send an OTP to reset your password.</p>' +
+          '<div class="field"><label>Mobile Number</label><input id="fpMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
+          '<div class="otp-row" id="otpRow" style="display:none">' +
+            '<input maxlength="1" data-otp><input maxlength="1" data-otp><input maxlength="1" data-otp><input maxlength="1" data-otp>' +
+          '</div>' +
+          '<div class="field" id="newPassField" style="display:none"><label>New Password</label><input id="fpNewPass" type="password" placeholder="Min 6 characters"></div>' +
+          '<button class="btn btn--primary btn--block" id="fpBtn">Send OTP</button>' +
+          '<div class="auth-alt">Remembered it? <a href="#" data-mode="login">Back to login</a></div>';
+      }
+
+      function bindAuth(mode) {
+        document.querySelectorAll("[data-mode]").forEach(function (a) {
+          a.addEventListener("click", function (e) {
+            e.preventDefault();
+            renderAuth(a.getAttribute("data-mode"));
+          });
+        });
+
+        var loginBtn = document.getElementById("loginBtn");
+        if (loginBtn) {
+          loginBtn.addEventListener("click", function () {
+            var m = document.getElementById("loginMobile").value.trim();
+            var p = document.getElementById("loginPass").value;
+            if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
+            if (p.length < 4) { AKF_TOAST("Enter your password", "error"); return; }
+            AKF_USER.set({ name: "Seafood Lover", mobile: m, email: "" });
+            AKF_TOAST("Welcome back! Login successful", "success");
+            setTimeout(function () { window.location.href = "account.html"; }, 600);
+          });
+        }
+
+        var signupBtn = document.getElementById("signupBtn");
+        if (signupBtn) {
+          signupBtn.addEventListener("click", function () {
+            var n = document.getElementById("suName").value.trim();
+            var m = document.getElementById("suMobile").value.trim();
+            var e = document.getElementById("suEmail").value.trim();
+            var p = document.getElementById("suPass").value;
+            var p2 = document.getElementById("suPass2").value;
+            if (!n) { AKF_TOAST("Please enter your name", "error"); return; }
+            if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
+            if (p.length < 6) { AKF_TOAST("Password must be at least 6 characters", "error"); return; }
+            if (p !== p2) { AKF_TOAST("Passwords do not match", "error"); return; }
+            AKF_USER.set({ name: n, mobile: m, email: e });
+            AKF_TOAST("Account created! Welcome to AK Fishers 🎉", "success");
+            setTimeout(function () { window.location.href = "account.html"; }, 600);
+          });
+        }
+
+        var fpBtn = document.getElementById("fpBtn");
+        if (fpBtn) {
+          var step = 1;
+          fpBtn.addEventListener("click", function () {
+            if (step === 1) {
+              var m = document.getElementById("fpMobile").value.trim();
+              if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
+              document.getElementById("otpRow").style.display = "flex";
+              fpBtn.textContent = "Verify OTP";
+              step = 2;
+              AKF_TOAST("OTP sent to " + m, "info");
+            } else if (step === 2) {
+              var otp = Array.from(document.querySelectorAll("[data-otp]")).map(function (i) { return i.value; }).join("");
+              if (otp.length < 4) { AKF_TOAST("Enter the 4-digit OTP", "error"); return; }
+              document.getElementById("newPassField").style.display = "block";
+              fpBtn.textContent = "Reset Password";
+              step = 3;
+              AKF_TOAST("OTP verified", "success");
+            } else {
+              var np = document.getElementById("fpNewPass").value;
+              if (np.length < 6) { AKF_TOAST("Password must be at least 6 characters", "error"); return; }
+              AKF_TOAST("Password reset successfully! Please login", "success");
+              setTimeout(function () { renderAuth("login"); }, 800);
+            }
+          });
+          document.querySelectorAll("[data-otp]").forEach(function (inp, idx, arr) {
+            inp.addEventListener("input", function () {
+              if (this.value && idx < arr.length - 1) arr[idx + 1].focus();
+            });
+            inp.addEventListener("keydown", function (e) {
+              if (e.key === "Backspace" && !this.value && idx > 0) arr[idx - 1].focus();
+            });
+          });
+        }
+      }
+
+      /* ================= DASHBOARD VIEW ================= */
+      function renderDashboard(panel) {
+        panel = panel || "profile";
+        var orders = [];
+        try { orders = JSON.parse(localStorage.getItem("akf_orders")) || []; } catch (err) {}
+        var addresses = [];
+        try { addresses = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (err) {}
+
+        var navItems = [
+          { id: "profile", label: "My Profile", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+          { id: "addresses", label: "Saved Addresses", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
+          { id: "orders", label: "Order History", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>' },
+          { id: "tracking", label: "Order Tracking", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>' },
+          { id: "logout", label: "Logout", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>' }
+        ];
+
+        root.innerHTML =
+          '<section class="section" style="padding-top:30px">' +
+            '<div class="container">' +
+              '<div class="breadcrumbs"><a href="index.html">Home</a><span class="sep">›</span><span>My Account</span></div>' +
+              '<div class="acct-layout">' +
+                '<aside class="acct-side">' +
+                  '<div class="as-user">' +
+                    '<span class="as-avatar">' + (user.name ? user.name.charAt(0).toUpperCase() : "U") + '</span>' +
+                    '<span><span class="as-name">' + (user.name || "Customer") + '</span><br><span class="as-mail">' + (user.mobile || "") + '</span></span>' +
+                  '</div>' +
+                  '<nav>' +
+                    navItems.map(function (n) {
+                      return '<a href="#" data-panel="' + n.id + '" class="' + (n.id === panel ? "active" : "") + '">' + n.icon + ' ' + n.label + '</a>';
+                    }).join("") +
+                  '</nav>' +
+                '</aside>' +
+                '<div>' +
+                  '<div class="acct-panel active" id="panel-profile">' + panelProfile() + '</div>' +
+                  '<div class="acct-panel" id="panel-addresses">' + panelAddresses(addresses) + '</div>' +
+                  '<div class="acct-panel" id="panel-orders">' + panelOrders(orders) + '</div>' +
+                  '<div class="acct-panel" id="panel-tracking">' + panelTracking(orders) + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</section>';
+
+        // Nav
+        document.querySelectorAll("[data-panel]").forEach(function (a) {
+          a.addEventListener("click", function (e) {
+            e.preventDefault();
+            var p = a.getAttribute("data-panel");
+            if (p === "logout") {
+              AKF_USER.clear();
+              AKF_TOAST("Logged out successfully", "info");
+              setTimeout(function () { window.location.href = "account.html"; }, 500);
+              return;
+            }
+            document.querySelectorAll("[data-panel]").forEach(function (x) { x.classList.remove("active"); });
+            a.classList.add("active");
+            document.querySelectorAll(".acct-panel").forEach(function (x) { x.classList.remove("active"); });
+            document.getElementById("panel-" + p).classList.add("active");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        });
+
+        // Save profile
+        var saveBtn = document.getElementById("saveProfile");
+        if (saveBtn) {
+          saveBtn.addEventListener("click", function () {
+            var n = document.getElementById("pfName").value.trim();
+            var m = document.getElementById("pfMobile").value.trim();
+            var e = document.getElementById("pfEmail").value.trim();
+            if (!n || !/^\d{10}$/.test(m)) { AKF_TOAST("Check name and mobile", "error"); return; }
+            AKF_USER.set({ name: n, mobile: m, email: e });
+            AKF_TOAST("Profile updated", "success");
+            setTimeout(function () { renderDashboard("profile"); }, 500);
+          });
+        }
+
+        // Add address
+        var addAddr = document.getElementById("addAddress");
+        if (addAddr) {
+          addAddr.addEventListener("click", function () {
+            var flat = document.getElementById("adFlat").value.trim();
+            var bld = document.getElementById("adBld").value.trim();
+            var area = document.getElementById("adArea").value.trim();
+            var pin = document.getElementById("adPin").value.trim();
+            if (!flat || !bld || !area || !/^\d{6}$/.test(pin)) { AKF_TOAST("Fill all address fields correctly", "error"); return; }
+            var list = JSON.parse(localStorage.getItem("akf_addresses") || "[]");
+            list.push({ flat: flat, building: bld, area: area, pin: pin, label: "Home" });
+            localStorage.setItem("akf_addresses", JSON.stringify(list));
+            AKF_TOAST("Address saved", "success");
+            renderDashboard("addresses");
+          });
+        }
+
+        // Delete address
+        document.querySelectorAll("[data-del-addr]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var idx = parseInt(b.getAttribute("data-del-addr"), 10);
+            var list = JSON.parse(localStorage.getItem("akf_addresses") || "[]");
+            list.splice(idx, 1);
+            localStorage.setItem("akf_addresses", JSON.stringify(list));
+            AKF_TOAST("Address removed", "info");
+            renderDashboard("addresses");
+          });
+        });
+      }
+
+      function panelProfile() {
+        return '<h2>My Profile</h2>' +
+          '<p class="ap-sub">Manage your personal information.</p>' +
+          '<div class="checkout-card" style="max-width:560px">' +
+            '<div class="field"><label>Full Name</label><input id="pfName" value="' + (user.name || "") + '"></div>' +
+            '<div class="field"><label>Mobile Number</label><input id="pfMobile" inputmode="numeric" maxlength="10" value="' + (user.mobile || "") + '"></div>' +
+            '<div class="field"><label>Email</label><input id="pfEmail" type="email" value="' + (user.email || "") + '"></div>' +
+            '<button class="btn btn--primary" id="saveProfile">Save Changes</button>' +
+          '</div>';
+      }
+
+      function panelAddresses(addresses) {
+        var cards = addresses.length ? addresses.map(function (a, i) {
+          return '<div class="addr-card" style="margin-bottom:14px">' +
+            '<span class="ac-tag">' + a.label + '</span>' +
+            '<b>' + a.flat + '</b>' +
+            '<p>' + a.building + ', ' + a.area + ', Mumbai, Maharashtra ' + a.pin + '</p>' +
+            '<div class="ac-actions"><button data-del-addr="' + i + '">Remove</button></div>' +
+          '</div>';
+        }).join("") : '<p class="text-muted">No saved addresses yet.</p>';
+
+        return '<h2>Saved Addresses</h2>' +
+          '<p class="ap-sub">Your delivery addresses for faster checkout.</p>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">' +
+            '<div>' + cards + '</div>' +
+            '<div class="checkout-card">' +
+              '<h3 style="font-size:16px;margin-bottom:14px">Add New Address</h3>' +
+              '<div class="field"><label>House / Flat</label><input id="adFlat" placeholder="e.g. 402"></div>' +
+              '<div class="field"><label>Building / Society</label><input id="adBld" placeholder="Building name"></div>' +
+              '<div class="field"><label>Area / Locality</label><input id="adArea" placeholder="e.g. Bandra West"></div>' +
+              '<div class="field"><label>Pincode</label><input id="adPin" inputmode="numeric" maxlength="6" placeholder="400050"></div>' +
+              '<button class="btn btn--primary btn--block" id="addAddress">Save Address</button>' +
+            '</div>' +
+          '</div>';
+      }
+
+      function panelOrders(orders) {
+        if (!orders.length) {
+          return '<h2>Order History</h2><p class="ap-sub">Your past orders will appear here.</p>' +
+            '<div class="empty-state" style="border:1px solid var(--line-soft);border-radius:var(--r-lg)">' +
+              '<div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>' +
+              '<h3>No orders yet</h3><p>Your fresh seafood journey starts here.</p>' +
+              '<a class="btn btn--primary" href="shop.html">Shop Now</a>' +
+            '</div>';
+        }
+        return '<h2>Order History</h2><p class="ap-sub">' + orders.length + ' order(s) placed.</p>' +
+          orders.map(function (o) {
+            var statusClass = o.status === "delivered" ? "delivered" : o.status === "cancelled" ? "cancelled" : o.status === "out" ? "out" : o.status === "packed" ? "packed" : "confirmed";
+            return '<div class="order-card">' +
+              '<div class="oc-head">' +
+                '<span><span class="oc-id">#' + o.id + '</span><br><span class="oc-date">' + o.date + ' · ' + o.slot + '</span></span>' +
+                '<span class="oc-status ' + statusClass + '">' + o.status.charAt(0).toUpperCase() + o.status.slice(1) + '</span>' +
+              '</div>' +
+              '<div class="oc-items">' +
+                o.items.map(function (i) { return '<img src="' + i.img + '" alt="' + i.name + '" title="' + i.name + '">'; }).join("") +
+              '</div>' +
+              '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + o.payment + '</div>' +
+            '</div>';
+          }).join("");
+      }
+
+      function panelTracking(orders) {
+        var active = orders.find(function (o) { return o.status !== "delivered" && o.status !== "cancelled"; }) || orders[0];
+        if (!active) {
+          return '<h2>Order Tracking</h2><p class="ap-sub">Track your live orders here.</p>' +
+            '<div class="empty-state" style="border:1px solid var(--line-soft);border-radius:var(--r-lg)">' +
+              '<div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>' +
+              '<h3>No active orders</h3><p>Place an order to track it live.</p>' +
+              '<a class="btn btn--primary" href="shop.html">Shop Now</a>' +
+            '</div>';
+        }
+        var steps = ["Order Confirmed", "Being Cleaned & Packed", "Out For Delivery", "Delivered"];
+        var currentIdx = active.status === "confirmed" ? 0 : active.status === "packed" ? 1 : active.status === "out" ? 2 : 3;
+        return '<h2>Order Tracking</h2>' +
+          '<p class="ap-sub">Order <b>#' + active.id + '</b> · ' + active.deliveryDate + ' · ' + active.slot + '</p>' +
+          '<div class="checkout-card">' +
+            '<div class="track-steps">' +
+              steps.map(function (s, i) {
+                return '<div class="track-step ' + (i < currentIdx ? "done" : i === currentIdx ? "current" : "") + '">' +
+                  '<div class="ts-dot">' + (i < currentIdx ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>' : i + 1) + '</div>' +
+                  '<span>' + s + '</span>' +
+                '</div>';
+              }).join("") +
+            '</div>' +
+            '<div class="cs-note mt-16">📦 Delivering to: ' + active.address + '</div>' +
+          '</div>' +
+          '<div class="order-card">' +
+            '<div class="oc-head"><span class="oc-id">#' + active.id + '</span><span class="oc-date">' + active.date + '</span></div>' +
+            '<div class="oc-items">' + active.items.map(function (i) { return '<img src="' + i.img + '" alt="">'; }).join("") + '</div>' +
+            '<div class="oc-total">Total: <b>' + akfFormatINR(active.total) + '</b> · ' + active.payment + '</div>' +
+          '</div>';
+      }
+
+      /* ---------- Init ---------- */
+      var hash = window.location.hash.replace("#", "");
+      if (user) {
+        renderDashboard(hash || "profile");
+      } else {
+        renderAuth(hash === "signup" ? "signup" : hash === "forgot" ? "forgot" : "login");
+      }
+    })();
+  </script>
+</body>
+</html>

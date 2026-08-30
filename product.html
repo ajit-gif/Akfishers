@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — AK Fishers</title>
+  <meta name="description" content="Fresh seafood product details — choose weight, cleaning preference and order fresh delivery in Mumbai.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=5">
+</head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <div class="container">
+      <div class="breadcrumbs" id="breadcrumbs">
+        <a href="index.html">Home</a><span class="sep">›</span><a href="shop.html">Shop</a><span class="sep">›</span><span id="bcProduct">Product</span>
+      </div>
+    </div>
+
+    <section class="section" style="padding-top:10px">
+      <div class="container">
+        <div class="pd-layout" id="pdLayout"></div>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <section class="section section--tint" style="padding-top:40px">
+      <div class="container">
+        <div class="pd-tabs">
+          <div class="tabs-nav">
+            <button class="active" data-tab="desc">Description</button>
+            <button data-tab="nutrition">Nutrition</button>
+            <button data-tab="storage">Storage &amp; Handling</button>
+            <button data-tab="reviews">Reviews</button>
+          </div>
+          <div class="tab-panel active" id="tab-desc"></div>
+          <div class="tab-panel" id="tab-nutrition"></div>
+          <div class="tab-panel" id="tab-storage"></div>
+          <div class="tab-panel" id="tab-reviews"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">You May Also Like</span>
+          <h2>Related Products</h2>
+        </div>
+        <div class="product-grid" id="relatedGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=5"></script>
+  <script src="scripts/app.js?v=5"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get("id") || "pomfret-black";
+      var p = akfGetProduct(id);
+      if (!p) { p = AKF_PRODUCTS[0]; id = p.id; }
+
+      document.title = p.name + " — AK Fishers";
+      document.getElementById("bcProduct").textContent = p.name;
+
+      var selWeight = p.weights[1] || p.weights[0] || 500;
+      var selCut = p.cuts[0];
+      var qty = 1;
+      var mainImg = p.img;
+
+      function unitPrice() {
+        return selWeight ? p.price * (selWeight / 1000) : p.price;
+      }
+
+      function render() {
+        var layout = document.getElementById("pdLayout");
+        var price = unitPrice();
+        var oldPrice = p.oldPrice ? p.oldPrice * (selWeight / 1000) : 0;
+
+        layout.innerHTML =
+          '<div class="pd-gallery">' +
+            '<div class="pd-main-img">' +
+              '<div class="pd-badges">' + akfBadgeHTML(p) + '</div>' +
+              '<img src="' + mainImg + '" alt="' + p.name + '" id="mainImg">' +
+            '</div>' +
+            '<div class="pd-thumbs">' +
+              p.gallery.map(function (g, i) {
+                return '<button class="' + (g === mainImg ? "active" : "") + '" data-img="' + g + '"><img src="' + g + '" alt=""></button>';
+              }).join("") +
+            '</div>' +
+          '</div>' +
+
+          '<div class="pd-info">' +
+            '<h1>' + akfEscapeHTML(p.name) + '</h1>' +
+            '<div class="pd-marathi">' + akfEscapeHTML(p.marathi) + '</div>' +
+            (p.reviews > 0
+              ? '<div class="pd-rating"><span class="stars">' + akfStars(p.rating) + '</span>' +
+                '<span class="r-num">' + p.rating + '</span>' +
+                '<span class="r-count">(' + p.reviews + ' reviews)</span></div>'
+              : '') +
+            '<p class="pd-desc">' + akfEscapeHTML(p.desc) + '</p>' +
+            '<ul class="pd-fresh">' +
+              p.tags.map(function (t) { return '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> ' + t + '</li>'; }).join("") +
+              '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Cleaned To Order</li>' +
+            '</ul>' +
+
+            '<div class="pd-price-block">' +
+              '<div class="pp-row">' +
+                '<span class="pp-now">' + akfFormatINR(price) + '</span>' +
+                (oldPrice ? '<span class="pp-old">' + akfFormatINR(oldPrice) + '</span><span class="pp-save">Save ' + akfFormatINR(oldPrice - price) + '</span>' : '') +
+              '</div>' +
+              '<div class="pp-note">' + (selWeight ? 'Indicative price for ' + (selWeight >= 1000 ? (selWeight / 1000) + 'kg' : selWeight + 'g') + ' at ' + akfFormatINR(p.price) + '/kg · ' : '') + 'final rate confirmed on your order (typically ' + akfFormatINR(p.price) + ' – ' + akfFormatINR(p.priceMax || p.price) + '/kg)</div>' +
+            '</div>' +
+
+            '<div class="option-block">' +
+              '<h4>Select Weight <span class="ob-hint">approx.</span></h4>' +
+              '<div class="option-grid">' +
+                p.weights.map(function (w) {
+                  return '<div class="option-pill ' + (w === selWeight ? "active" : "") + '" data-weight="' + w + '">' +
+                    '<div class="op-main">' + (w >= 1000 ? (w / 1000) + " kg" : w + "g") + '</div>' +
+                    '<div class="op-sub">' + akfFormatINR(p.price * (w / 1000)) + '</div>' +
+                  '</div>';
+                }).join("") +
+              '</div>' +
+            '</div>' +
+
+            '<div class="option-block">' +
+              '<h4>Cleaning &amp; Cutting <span class="ob-hint">free of cost</span></h4>' +
+              '<div class="option-grid option-grid--cut">' +
+                p.cuts.map(function (c) {
+                  return '<div class="option-pill ' + (c === selCut ? "active" : "") + '" data-cut="' + c + '">' +
+                    '<div class="op-main">' + c + '</div>' +
+                  '</div>';
+                }).join("") +
+              '</div>' +
+            '</div>' +
+
+            '<div class="qty-row">' +
+              '<div class="qty-stepper">' +
+                '<button data-qty="-1" aria-label="Decrease">−</button>' +
+                '<span class="qty-val" id="qtyVal">' + qty + '</span>' +
+                '<button data-qty="1" aria-label="Increase">+</button>' +
+              '</div>' +
+              '<span class="text-muted" style="font-size:13.5px">Total: <b id="totalPrice" style="color:var(--ink)">' + akfFormatINR(price * qty) + '</b></span>' +
+            '</div>' +
+
+            '<div class="pd-ctas">' +
+              '<button class="btn btn--primary" id="addToCart">Add To Cart</button>' +
+              '<button class="btn btn--aqua" id="buyNow">Buy Now</button>' +
+              '<button class="btn btn--ghost" id="wishBtn">' +
+                '<svg viewBox="0 0 24 24" fill="' + (AKF_WISH.has(p.id) ? "currentColor" : "none") + '" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 21s-7.5-4.7-10-9.3C.6 8.6 2.4 5 5.8 5c2 0 3.4 1 4.2 2.4C10.8 6 12.2 5 14.2 5c3.4 0 5.2 3.6 3.8 6.7C19.5 16.3 12 21 12 21z"/></svg>' +
+                '<span>Wishlist</span>' +
+              '</button>' +
+            '</div>' +
+
+            '<div class="pd-info-cards">' +
+              '<div class="pd-info-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span><b>Next-day delivery</b><span>Place your order 1 day in advance</span></span></div>' +
+              '<div class="pd-info-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span><b>Quality checked</b><span>Inspected for freshness before packing</span></span></div>' +
+              '<div class="pd-info-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4 6l16 12M20 6L4 18"/></svg><span><b>Ice-packed</b><span>Vacuum sealed in insulated boxes</span></span></div>' +
+              '<div class="pd-info-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span><b>COD available</b><span>Pay online or on delivery</span></span></div>' +
+            '</div>' +
+          '</div>';
+
+        // Tabs content
+        document.getElementById("tab-desc").innerHTML =
+          '<p>' + p.desc + '</p>' +
+          '<ul>' +
+            '<li>Selected fresh and packed for your chosen delivery date</li>' +
+            '<li>Cleaned and cut to your preference at no extra cost</li>' +
+            '<li>Packed in food-grade vacuum pouches with ice gel packs</li>' +
+            '<li>Available in ' + p.weights.map(function (w) { return w >= 1000 ? (w / 1000) + "kg" : w + "g"; }).join(", ") + ' packs</li>' +
+          '</ul>';
+
+        document.getElementById("tab-nutrition").innerHTML =
+          '<p>Nutritional highlights (per 100g serving):</p>' +
+          '<ul>' + p.nutrition.map(function (n) { return "<li>" + n + "</li>"; }).join("") + '</ul>';
+
+        document.getElementById("tab-storage").innerHTML =
+          '<p>' + p.storage + '</p>' +
+          '<ul>' +
+            '<li>Keep chilled at 0–4°C until cooking</li>' +
+            '<li>Do not refreeze after thawing</li>' +
+            '<li>Rinse with cold water before cooking</li>' +
+          '</ul>';
+
+        document.getElementById("tab-reviews").innerHTML =
+          '<p style="margin-bottom:18px">What customers say about AK Fishers:</p>' +
+          '<div class="testi-grid">' +
+          AKF_TESTIMONIALS.map(function (r) {
+            return '<div class="testi-card">' +
+              '<div class="t-stars">' + akfStars(r.rating) + '</div>' +
+              '<p class="t-text">' + akfEscapeHTML(r.text) + '</p>' +
+              '<div class="t-person"><span class="t-avatar">' + akfEscapeHTML(r.name.charAt(0)) + '</span>' +
+              '<span><span class="t-name">' + akfEscapeHTML(r.name) + '</span><br><span class="t-area">' + akfEscapeHTML(r.area) + '</span></span>' +
+              '<span class="t-verified" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified</span></div>' +
+            '</div>';
+          }).join("") + '</div>';
+
+        // Related
+        var related = AKF_PRODUCTS.filter(function (x) { return x.category === p.category && x.id !== p.id; })
+          .concat(AKF_PRODUCTS.filter(function (x) { return x.category !== p.category; }))
+          .slice(0, 4);
+        document.getElementById("relatedGrid").innerHTML = related.map(akfProductCardHTML).join("");
+
+        bindEvents();
+      }
+
+      function bindEvents() {
+        // Thumbs
+        document.querySelectorAll(".pd-thumbs button").forEach(function (b) {
+          b.addEventListener("click", function () {
+            mainImg = b.getAttribute("data-img");
+            document.getElementById("mainImg").src = mainImg;
+            document.querySelectorAll(".pd-thumbs button").forEach(function (x) { x.classList.remove("active"); });
+            b.classList.add("active");
+          });
+        });
+
+        // Weight
+        document.querySelectorAll("[data-weight]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            selWeight = parseInt(el.getAttribute("data-weight"), 10);
+            document.querySelectorAll("[data-weight]").forEach(function (x) { x.classList.remove("active"); });
+            el.classList.add("active");
+            updatePrice();
+          });
+        });
+
+        // Cut
+        document.querySelectorAll("[data-cut]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            selCut = el.getAttribute("data-cut");
+            document.querySelectorAll("[data-cut]").forEach(function (x) { x.classList.remove("active"); });
+            el.classList.add("active");
+          });
+        });
+
+        // Qty
+        document.querySelectorAll("[data-qty]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            qty = Math.max(1, qty + parseInt(b.getAttribute("data-qty"), 10));
+            document.getElementById("qtyVal").textContent = qty;
+            updatePrice();
+          });
+        });
+
+        // Add to cart
+        document.getElementById("addToCart").addEventListener("click", function () {
+          AKF_CART.add(p.id, selWeight, selCut, qty);
+          AKF_TOAST(p.name + " (" + (selWeight >= 1000 ? selWeight / 1000 + "kg" : selWeight + "g") + ", " + selCut + ") added to cart", "success");
+        });
+
+        // Buy now
+        document.getElementById("buyNow").addEventListener("click", function () {
+          AKF_CART.add(p.id, selWeight, selCut, qty);
+          window.location.href = "checkout.html";
+        });
+
+        // Wishlist
+        document.getElementById("wishBtn").addEventListener("click", function () {
+          var active = AKF_WISH.toggle(p.id);
+          this.querySelector("svg").setAttribute("fill", active ? "currentColor" : "none");
+          AKF_TOAST(active ? "Added to wishlist" : "Removed from wishlist", active ? "success" : "info");
+        });
+      }
+
+      function updatePrice() {
+        var price = unitPrice();
+        document.querySelector(".pp-now").innerHTML = akfFormatINR(price);
+        var oldEl = document.querySelector(".pp-old");
+        if (oldEl) oldEl.textContent = akfFormatINR(p.oldPrice * (selWeight / 1000));
+        var saveEl = document.querySelector(".pp-save");
+        if (saveEl) saveEl.textContent = "Save " + akfFormatINR(p.oldPrice * (selWeight / 1000) - price);
+        document.querySelector(".pp-note").textContent = "Indicative price for " + (selWeight >= 1000 ? (selWeight / 1000) + "kg" : selWeight + "g") + " at " + akfFormatINR(p.price) + "/kg · final rate confirmed on your order (typically " + akfFormatINR(p.price) + " – " + akfFormatINR(p.priceMax || p.price) + "/kg)";
+        document.getElementById("totalPrice").textContent = akfFormatINR(price * qty);
+      }
+
+      // Tabs
+      document.querySelectorAll(".tabs-nav button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          document.querySelectorAll(".tabs-nav button").forEach(function (x) { x.classList.remove("active"); });
+          b.classList.add("active");
+          document.querySelectorAll(".tab-panel").forEach(function (x) { x.classList.remove("active"); });
+          document.getElementById("tab-" + b.getAttribute("data-tab")).classList.add("active");
+        });
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
