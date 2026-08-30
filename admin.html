@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://akfishers.com/admin">
+  <meta name="robots" content="noindex, nofollow">
   <title>Admin Panel — AK Fishers</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e4d6e'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>AK</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=5">
-  <link rel="stylesheet" href="styles/admin.css?v=5">
+  <link rel="stylesheet" href="styles/shared.css?v=6">
+  <link rel="stylesheet" href="styles/admin.css?v=6">
 </head>
 <body class="admin-body">
 
@@ -29,7 +31,7 @@
         <a href="#" data-view="delivery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Delivery</a>
         <a href="#" data-view="coupons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4L11 3H4v7l10.4 10.6a2 2 0 0 0 2.8 0l3.4-3.4a2 2 0 0 0 0-2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg> Coupons</a>
       </nav>
-      <div class="as-back"><a href="index.html">← Back to Store</a><br><a href="#" id="adminLogout" style="display:inline-block;margin-top:8px">Sign out</a></div>
+      <div class="as-back"><a href="/">← Back to Store</a><br><a href="#" id="adminLogout" style="display:inline-block;margin-top:8px">Sign out</a></div>
     </aside>
 
     <!-- ============ MAIN ============ -->
@@ -88,8 +90,8 @@
     </div>
   </div>
 
-  <script src="scripts/products.js?v=5"></script>
-  <script src="scripts/app.js?v=5"></script>
+  <script src="scripts/products.js?v=6"></script>
+  <script src="scripts/app.js?v=6"></script>
   <script>
     (function () {
       "use strict";
@@ -148,7 +150,7 @@
         main.innerHTML =
           '<div class="admin-topbar">' +
             '<div><h1>Dashboard</h1><div class="at-sub">Welcome back! Here\'s your store at a glance.</div></div>' +
-            '<div class="at-actions"><a class="btn btn--primary btn--sm" href="shop.html">View Store</a></div>' +
+            '<div class="at-actions"><a class="btn btn--primary btn--sm" href="/shop">View Store</a></div>' +
           '</div>' +
           '<div class="stat-grid">' +
             '<div class="stat-card"><span class="sc-icon blue">' + I.doc + '</span><span><b>' + orders.length + '</b><span>Total Orders</span></span></div>' +

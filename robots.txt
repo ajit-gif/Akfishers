@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Transactional / private areas — kept out of the index
+Disallow: /cart
+Disallow: /cart.html
+Disallow: /checkout
+Disallow: /checkout.html
+Disallow: /account
+Disallow: /account.html
+Disallow: /admin
+Disallow: /admin.html
+
+Sitemap: https://akfishers.com/sitemap.xml

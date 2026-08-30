@@ -434,25 +434,25 @@ function akfProductCardHTML(p) {
 
   return '<article class="product-card" data-id="' + p.id + '">' +
     '<div class="pc-media">' +
-      '<a href="product.html?id=' + p.id + '"><img src="' + p.img + '" alt="' + akfEscapeHTML(p.name) + '" loading="lazy"></a>' +
+      '<a href="/product?id=' + p.id + '"><img src="' + p.img + '" alt="' + akfEscapeHTML(p.name) + '" loading="lazy"></a>' +
       '<div class="pc-badges">' + akfBadgeHTML(p) + '</div>' +
       '<button class="pc-wish" data-wish="' + p.id + '" aria-label="Add ' + akfEscapeHTML(p.name) + ' to wishlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7.5-4.7-10-9.3C.6 8.6 2.4 5 5.8 5c2 0 3.4 1 4.2 2.4C10.8 6 12.2 5 14.2 5c3.4 0 5.2 3.6 3.8 6.7C19.5 16.3 12 21 12 21z"/></svg></button>' +
     '</div>' +
     '<div class="pc-body">' +
-      '<a href="product.html?id=' + p.id + '"><h3 class="pc-name">' + akfEscapeHTML(p.name) + '</h3></a>' +
+      '<a href="/product?id=' + p.id + '"><h3 class="pc-name">' + akfEscapeHTML(p.name) + '</h3></a>' +
       '<div class="pc-marathi">' + akfEscapeHTML(p.marathi) + '</div>' +
       '<p class="pc-desc">' + akfEscapeHTML(p.desc) + '</p>' +
       metaHTML +
       '<div class="pc-price-row">' + akfPriceRangeHTML(p) + '</div>' +
       '<div class="pc-actions">' +
-        '<a class="btn btn--primary btn--sm" href="product.html?id=' + p.id + '">Choose &amp; Add</a>' +
+        '<a class="btn btn--primary btn--sm" href="/product?id=' + p.id + '">Choose &amp; Add</a>' +
       '</div>' +
     '</div>' +
   '</article>';
 }
 
 function akfCategoryCardHTML(c) {
-  return '<a class="cat-card" href="shop.html?cat=' + c.id + '">' +
+  return '<a class="cat-card" href="/shop?cat=' + c.id + '">' +
     '<img src="' + c.img + '" alt="' + akfEscapeHTML(c.name) + '" loading="lazy">' +
     '<span class="cc-count">' + akfCategoryCount(c.id) + ' item' + (akfCategoryCount(c.id) === 1 ? '' : 's') + '</span>' +
     '<div class="cc-label"><h3>' + akfEscapeHTML(c.name) + '</h3><p>' + akfEscapeHTML(c.marathi) + ' · ' + akfEscapeHTML(c.desc) + '</p></div>' +

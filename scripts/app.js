@@ -192,7 +192,7 @@
       '<div class="container">' +
         '<div class="header-main">' +
           '<button class="h-action h-action--mobile" data-open-menu aria-label="Menu">' + ICONS.menu + '</button>' +
-          '<a class="logo" href="index.html">' +
+          '<a class="logo" href="/">' +
             '<span class="logo-mark">' + ICONS.fish + '</span>' +
             '<span class="logo-text"><span class="name">AK <span>Fishers</span></span><span class="tag">Fresh From The Sea</span></span>' +
           '</a>' +
@@ -206,25 +206,25 @@
             '<div class="search-suggest" data-search-suggest></div>' +
           '</div>' +
           '<div class="header-actions">' +
-            '<a class="h-action" href="account.html" title="Account">' + ICONS.user + '<span>' + accountLabel + '</span></a>' +
-            '<a class="h-action" href="cart.html" title="Cart">' + ICONS.cart + '<span>Cart</span><span class="cart-count" style="display:none">0</span></a>' +
+            '<a class="h-action" href="/account" title="Account">' + ICONS.user + '<span>' + accountLabel + '</span></a>' +
+            '<a class="h-action" href="/cart" title="Cart">' + ICONS.cart + '<span>Cart</span><span class="cart-count" style="display:none">0</span></a>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<nav class="nav-bar"><div class="container nav-inner">' +
         '<div class="mega">' +
-          '<a class="nav-link active" href="shop.html">' + ICONS.grid + ' Categories <span class="caret">▼</span></a>' +
+          '<a class="nav-link active" href="/shop">' + ICONS.grid + ' Categories <span class="caret">▼</span></a>' +
           '<div class="mega-panel">' +
             AKF_CATEGORIES.map(function (c) {
-              return '<a href="shop.html?cat=' + c.id + '"><img src="' + c.img + '" alt=""><span>' + c.name + '<small>' + c.marathi + ' · ' + akfCategoryCount(c.id) + ' items</small></span></a>';
+              return '<a href="/shop?cat=' + c.id + '"><img src="' + c.img + '" alt=""><span>' + c.name + '<small>' + c.marathi + ' · ' + akfCategoryCount(c.id) + ' items</small></span></a>';
             }).join("") +
           '</div>' +
         '</div>' +
-        '<a class="nav-link" href="shop.html?sort=popular">Best Sellers</a>' +
-        '<a class="nav-link" href="shop.html?cat=crabs">Crab &amp; Shellfish</a>' +
-        '<a class="nav-link" href="shop.html?cat=smallfish">Local Catch</a>' +
-        '<a class="nav-link" href="about.html">About Us</a>' +
-        '<a class="nav-link" href="contact.html">Contact</a>' +
+        '<a class="nav-link" href="/shop?sort=popular">Best Sellers</a>' +
+        '<a class="nav-link" href="/shop?cat=crabs">Crab &amp; Shellfish</a>' +
+        '<a class="nav-link" href="/shop?cat=smallfish">Local Catch</a>' +
+        '<a class="nav-link" href="/about">About Us</a>' +
+        '<a class="nav-link" href="/contact">Contact</a>' +
       '</div></nav>';
 
     // Mobile menu must live on <body>, not inside .site-header — the header's
@@ -235,21 +235,21 @@
       '<div class="mobile-menu" data-mobile-menu>' +
         '<div class="mm-backdrop" data-close-menu></div>' +
         '<div class="mm-panel">' +
-          '<div class="mm-head"><a class="logo" href="index.html"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span></span></a>' +
+          '<div class="mm-head"><a class="logo" href="/"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span></span></a>' +
           '<button class="mm-close" data-close-menu aria-label="Close menu">' + ICONS.close + '</button></div>' +
           '<div class="mm-search"><input type="text" placeholder="Search seafood…" data-mm-search></div>' +
           '<div class="mm-group"><h4>Categories</h4>' +
             AKF_CATEGORIES.map(function (c) {
-              return '<a href="shop.html?cat=' + c.id + '"><img src="' + c.img + '" alt="">' + c.name + '<span class="mm-arrow">›</span></a>';
+              return '<a href="/shop?cat=' + c.id + '"><img src="' + c.img + '" alt="">' + c.name + '<span class="mm-arrow">›</span></a>';
             }).join("") +
           '</div>' +
           '<div class="mm-divider"></div>' +
           '<div class="mm-group"><h4>Quick Links</h4>' +
-            '<a href="shop.html">' + ICONS.grid + ' Shop All</a>' +
-            '<a href="about.html">' + ICONS.info + ' About Us</a>' +
-            '<a href="contact.html">' + ICONS.phone + ' Contact</a>' +
-            '<a href="account.html">' + ICONS.user + ' My Account</a>' +
-            '<a href="cart.html">' + ICONS.cart + ' My Cart</a>' +
+            '<a href="/shop">' + ICONS.grid + ' Shop All</a>' +
+            '<a href="/about">' + ICONS.info + ' About Us</a>' +
+            '<a href="/contact">' + ICONS.phone + ' Contact</a>' +
+            '<a href="/account">' + ICONS.user + ' My Account</a>' +
+            '<a href="/cart">' + ICONS.cart + ' My Cart</a>' +
           '</div>' +
         '</div>' +
       '</div>');
@@ -281,7 +281,7 @@
           suggest.innerHTML = '<a style="cursor:default;color:var(--muted)">No matches for "' + searchInput.value + '"</a>';
         } else {
           suggest.innerHTML = matches.map(function (p) {
-            return '<a href="product.html?id=' + p.id + '"><img src="' + p.img + '" alt=""><span><span class="s-name">' + p.name + '</span><br><span class="s-marathi">' + p.marathi + ' · from ' + akfFormatINR(p.price) + '/kg</span></span></a>';
+            return '<a href="/product?id=' + p.id + '"><img src="' + p.img + '" alt=""><span><span class="s-name">' + p.name + '</span><br><span class="s-marathi">' + p.marathi + ' · from ' + akfFormatINR(p.price) + '/kg</span></span></a>';
           }).join("");
         }
         suggest.classList.add("open");
@@ -291,7 +291,7 @@
       });
       searchInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && searchInput.value.trim()) {
-          window.location.href = "shop.html?q=" + encodeURIComponent(searchInput.value.trim());
+          window.location.href = "/shop?q=" + encodeURIComponent(searchInput.value.trim());
         }
       });
     }
@@ -300,7 +300,7 @@
     if (mmSearch) {
       mmSearch.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && mmSearch.value.trim()) {
-          window.location.href = "shop.html?q=" + encodeURIComponent(mmSearch.value.trim());
+          window.location.href = "/shop?q=" + encodeURIComponent(mmSearch.value.trim());
         }
       });
     }
@@ -332,7 +332,7 @@
       '<div class="container">' +
         '<div class="footer-top">' +
           '<div class="footer-brand">' +
-            '<a class="logo" href="index.html"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span><span class="tag">Fresh From The Sea</span></span></a>' +
+            '<a class="logo" href="/"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span><span class="tag">Fresh From The Sea</span></span></a>' +
             '<p>AK Fishers Supplier LLP — fresh seafood delivered from the sea to your doorstep across Mumbai. Carefully selected catch, hygienically cleaned, packed with care.</p>' +
             '<div class="footer-social">' +
               '<a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>' +
@@ -342,18 +342,18 @@
             '</div>' +
           '</div>' +
           '<div class="footer-col"><h4>Quick Links</h4><ul>' +
-            '<li><a href="index.html">Home</a></li>' +
-            '<li><a href="shop.html">Shop</a></li>' +
-            '<li><a href="shop.html">Categories</a></li>' +
-            '<li><a href="about.html">About Us</a></li>' +
-            '<li><a href="contact.html">Contact Us</a></li>' +
+            '<li><a href="/">Home</a></li>' +
+            '<li><a href="/shop">Shop</a></li>' +
+            '<li><a href="/shop">Categories</a></li>' +
+            '<li><a href="/about">About Us</a></li>' +
+            '<li><a href="/contact">Contact Us</a></li>' +
           '</ul></div>' +
           '<div class="footer-col"><h4>Customer Links</h4><ul>' +
-            '<li><a href="account.html">My Account</a></li>' +
-            '<li><a href="account.html#orders">My Orders</a></li>' +
-            '<li><a href="delivery.html">Delivery Information</a></li>' +
-            '<li><a href="privacy.html">Privacy Policy</a></li>' +
-            '<li><a href="terms.html">Terms &amp; Conditions</a></li>' +
+            '<li><a href="/account">My Account</a></li>' +
+            '<li><a href="/account#orders">My Orders</a></li>' +
+            '<li><a href="/delivery">Delivery Information</a></li>' +
+            '<li><a href="/privacy">Privacy Policy</a></li>' +
+            '<li><a href="/terms">Terms &amp; Conditions</a></li>' +
           '</ul></div>' +
           '<div class="footer-col"><h4>Get In Touch</h4><ul class="footer-contact">' +
             '<li>' + ICONS.phone + '<span><a href="tel:+918108106522">+91 81081 06522</a><br><span style="font-size:12px">Mon–Sun, 7 AM – 9 PM</span></span></li>' +
