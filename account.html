@@ -11,156 +11,239 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=7">
+  <link rel="stylesheet" href="styles/shared.css?v=8">
 </head>
 <body>
 
   <header class="site-header"></header>
 
-  <main id="accountRoot"></main>
+  <main id="accountRoot">
+    <section class="section"><div class="container"><p class="text-muted">Loading…</p></div></section>
+  </main>
 
   <footer class="site-footer"></footer>
 
-  <script src="scripts/products.js?v=7"></script>
-  <script src="scripts/app.js?v=7"></script>
+  <script src="scripts/products.js?v=8"></script>
+  <script src="scripts/app.js?v=8"></script>
   <script>
     (function () {
       "use strict";
 
       var root = document.getElementById("accountRoot");
-      var user = AKF_USER.get();
+      var user = null;              // set from the server (/api/me.php)
+      var busy = false;
+
+      /* Any leftover data from the old client-only "login" — used only to
+         pre-fill the sign-up form once, then discarded. */
+      var legacy = (function () {
+        try { return JSON.parse(localStorage.getItem("akf_user")) || null; } catch (e) { return null; }
+      })();
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      /* ---------------- shared form helpers ---------------- */
+      function field(id, label, o) {
+        o = o || {};
+        return '<div class="field" data-field="' + id + '">' +
+          '<label for="' + id + '">' + esc(label) +
+            (o.optional ? ' <span class="hint">(optional)</span>' : '') + '</label>' +
+          '<input id="' + id + '" name="' + id + '"' +
+            (o.type ? ' type="' + o.type + '"' : '') +
+            (o.inputmode ? ' inputmode="' + o.inputmode + '"' : '') +
+            (o.autocomplete ? ' autocomplete="' + o.autocomplete + '"' : '') +
+            (o.maxlength ? ' maxlength="' + o.maxlength + '"' : '') +
+            (o.placeholder ? ' placeholder="' + esc(o.placeholder) + '"' : '') +
+            (o.value ? ' value="' + esc(o.value) + '"' : '') +
+            ' aria-describedby="' + id + '-err">' +
+          '<div class="field-error" id="' + id + '-err" role="alert" aria-live="polite"></div>' +
+        '</div>';
+      }
+      function fieldError(id, msg) {
+        var f = root.querySelector('[data-field="' + id + '"]');
+        if (!f) return;
+        f.classList.toggle("has-error", !!msg);
+        var inp = f.querySelector("input");
+        if (inp) inp.setAttribute("aria-invalid", msg ? "true" : "false");
+        var e = f.querySelector(".field-error");
+        if (e) e.textContent = msg || "";
+      }
+      function clearErrors() {
+        root.querySelectorAll('[data-field]').forEach(function (f) {
+          f.classList.remove("has-error");
+          var e = f.querySelector(".field-error"); if (e) e.textContent = "";
+        });
+        alertBox("");
+      }
+      function alertBox(msg, kind) {
+        var b = root.querySelector("#authAlert");
+        if (!b) return;
+        b.className = "form-alert" + (msg ? " " + (kind || "err") : "");
+        b.textContent = msg || "";
+      }
+      function setBusy(btn, on, label) {
+        busy = on;
+        if (!btn) return;
+        btn.disabled = on;
+        btn.classList.toggle("is-busy", on);
+        if (on) {
+          btn.setAttribute("aria-busy", "true");
+          if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+          btn.textContent = label || btn.dataset.label;
+        } else {
+          btn.removeAttribute("aria-busy");
+          if (btn.dataset.label) btn.textContent = btn.dataset.label;
+        }
+      }
+      function applyServerFieldErrors(fields, map) {
+        if (!fields) return false;
+        var shown = false;
+        Object.keys(fields).forEach(function (k) {
+          var id = (map && map[k]) || k;
+          fieldError(id, fields[k]); shown = true;
+        });
+        return shown;
+      }
 
       /* ================= AUTH VIEW ================= */
+      var VISUAL =
+        '<div class="auth-visual">' +
+          '<img src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=1200&q=80" alt="Fresh prawns">' +
+          '<div class="av-content">' +
+            '<h2>Fresh seafood, one login away</h2>' +
+            '<p>Track orders, save addresses, reorder favourites and get exclusive member offers.</p>' +
+            '<ul class="av-points">' +
+              '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Order tracking &amp; history</li>' +
+              '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Saved delivery addresses</li>' +
+              '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Member-only coupons</li>' +
+              '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> One-tap reorder</li>' +
+            '</ul>' +
+          '</div>' +
+        '</div>';
+
       function renderAuth(mode) {
         mode = mode || "login";
         root.innerHTML =
-          '<div class="auth-layout">' +
-            '<div class="auth-visual">' +
-              '<img src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=1200&q=80" alt="Fresh prawns">' +
-              '<div class="av-content">' +
-                '<h2>Fresh seafood, one login away</h2>' +
-                '<p>Track orders, save addresses, reorder favourites and get exclusive member offers.</p>' +
-                '<ul class="av-points">' +
-                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Order tracking &amp; history</li>' +
-                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Saved delivery addresses</li>' +
-                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Member-only coupons</li>' +
-                  '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> One-tap reorder</li>' +
-                '</ul>' +
-              '</div>' +
-            '</div>' +
-            '<div class="auth-form-wrap">' +
-              '<div class="auth-card">' +
-                (mode === "login" ? renderLogin() : mode === "signup" ? renderSignup() : renderForgot()) +
-              '</div>' +
-            '</div>' +
+          '<div class="auth-layout">' + VISUAL +
+            '<div class="auth-form-wrap"><div class="auth-card">' +
+              '<div id="authAlert" class="form-alert" role="alert" aria-live="assertive"></div>' +
+              (mode === "login" ? loginView() : mode === "signup" ? signupView() : forgotView()) +
+            '</div></div>' +
           '</div>';
         bindAuth(mode);
+        var first = root.querySelector(".auth-card input");
+        if (first) try { first.focus(); } catch (e) {}
       }
 
-      function renderLogin() {
+      function loginView() {
         return '<h1>Welcome back</h1>' +
-          '<p class="auth-sub">Login to continue your fresh seafood journey.</p>' +
-          '<div class="field"><label>Mobile Number</label><input id="loginMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
-          '<div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Enter your password"></div>' +
-          '<button class="btn btn--primary btn--block" id="loginBtn">Login</button>' +
-          '<div class="auth-alt">Forgot password? <a href="#" data-mode="forgot">Reset here</a></div>' +
-          '<div class="auth-alt">New to AK Fishers? <a href="#" data-mode="signup">Create an account</a></div>';
+          '<p class="auth-sub">Log in with your mobile number or email.</p>' +
+          '<form id="loginForm" novalidate>' +
+            field("loginId", "Mobile number or email", { type: "text", inputmode: "email", autocomplete: "username", placeholder: "10-digit mobile or you@example.com" }) +
+            field("loginPass", "Password", { type: "password", autocomplete: "current-password", placeholder: "Your password" }) +
+            '<button class="btn btn--primary btn--block" id="loginBtn" type="submit">Log in</button>' +
+          '</form>' +
+          '<div class="auth-alt"><a href="#forgot" data-mode="forgot">Forgot password?</a></div>' +
+          '<div class="auth-alt">New to AK Fishers? <a href="#signup" data-mode="signup">Create an account</a></div>';
       }
 
-      function renderSignup() {
+      function signupView() {
+        var L = legacy || {};
         return '<h1>Create your account</h1>' +
           '<p class="auth-sub">Fresh seafood delivered to your door across Mumbai.</p>' +
-          '<div class="field"><label>Full Name</label><input id="suName" placeholder="Your full name"></div>' +
-          '<div class="field"><label>Mobile Number</label><input id="suMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
-          '<div class="field"><label>Email (optional)</label><input id="suEmail" type="email" placeholder="you@example.com"></div>' +
-          '<div class="field"><label>Password</label><input id="suPass" type="password" placeholder="Min 6 characters"></div>' +
-          '<div class="field"><label>Confirm Password</label><input id="suPass2" type="password" placeholder="Re-enter password"></div>' +
-          '<button class="btn btn--primary btn--block" id="signupBtn">Create Account</button>' +
-          '<div class="auth-alt">Already have an account? <a href="#" data-mode="login">Login</a></div>';
+          '<form id="signupForm" novalidate>' +
+            field("suName", "Full name", { type: "text", autocomplete: "name", placeholder: "Your full name", value: L.name || "" }) +
+            field("suMobile", "Mobile number", { type: "tel", inputmode: "numeric", autocomplete: "tel", maxlength: "10", placeholder: "10-digit mobile number", value: L.mobile || "" }) +
+            field("suEmail", "Email", { type: "email", inputmode: "email", autocomplete: "email", placeholder: "you@example.com", optional: true, value: L.email || "" }) +
+            field("suPass", "Password", { type: "password", autocomplete: "new-password", placeholder: "At least 8 characters" }) +
+            field("suPass2", "Confirm password", { type: "password", autocomplete: "new-password", placeholder: "Re-enter password" }) +
+            '<button class="btn btn--primary btn--block" id="signupBtn" type="submit">Create account</button>' +
+          '</form>' +
+          '<div class="auth-alt">Already have an account? <a href="#login" data-mode="login">Log in</a></div>';
       }
 
-      function renderForgot() {
-        return '<h1>Reset password</h1>' +
-          '<p class="auth-sub">Enter your mobile number and we\'ll send an OTP to reset your password.</p>' +
-          '<div class="field"><label>Mobile Number</label><input id="fpMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>' +
-          '<div class="otp-row" id="otpRow" style="display:none">' +
-            '<input maxlength="1" data-otp><input maxlength="1" data-otp><input maxlength="1" data-otp><input maxlength="1" data-otp>' +
-          '</div>' +
-          '<div class="field" id="newPassField" style="display:none"><label>New Password</label><input id="fpNewPass" type="password" placeholder="Min 6 characters"></div>' +
-          '<button class="btn btn--primary btn--block" id="fpBtn">Send OTP</button>' +
-          '<div class="auth-alt">Remembered it? <a href="#" data-mode="login">Back to login</a></div>';
+      function forgotView() {
+        var wa = "https://wa.me/918108106522?text=" + encodeURIComponent("Hi AK Fishers, I need to reset my account password.");
+        return '<h1>Reset your password</h1>' +
+          '<p class="auth-sub">We\'ll verify your identity and reset it for you.</p>' +
+          '<div class="cs-note" style="line-height:1.75">Message us on <a href="' + wa + '" target="_blank" rel="noopener"><b>WhatsApp</b></a> or call ' +
+            '<a href="tel:+918108106522"><b>+91&nbsp;81081&nbsp;06522</b></a> (Mon–Sun, 7 AM – 9 PM) and mention the mobile number on your account.</div>' +
+          '<a class="btn btn--primary btn--block mt-16" href="' + wa + '" target="_blank" rel="noopener">Message on WhatsApp</a>' +
+          '<div class="auth-alt mt-16"><a href="#login" data-mode="login">Back to log in</a></div>';
       }
 
       function bindAuth(mode) {
-        document.querySelectorAll("[data-mode]").forEach(function (a) {
+        root.querySelectorAll("[data-mode]").forEach(function (a) {
           a.addEventListener("click", function (e) {
             e.preventDefault();
+            if (busy) return;
             renderAuth(a.getAttribute("data-mode"));
           });
         });
 
-        var loginBtn = document.getElementById("loginBtn");
-        if (loginBtn) {
-          loginBtn.addEventListener("click", function () {
-            var m = document.getElementById("loginMobile").value.trim();
-            var p = document.getElementById("loginPass").value;
-            if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
-            if (p.length < 4) { AKF_TOAST("Enter your password", "error"); return; }
-            AKF_USER.set({ name: "Seafood Lover", mobile: m, email: "" });
-            AKF_TOAST("Welcome back! Login successful", "success");
-            setTimeout(function () { window.location.href = "/account"; }, 600);
-          });
-        }
+        var loginForm = document.getElementById("loginForm");
+        if (loginForm) {
+          loginForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (busy) return;
+            clearErrors();
+            var id = document.getElementById("loginId").value.trim();
+            var pw = document.getElementById("loginPass").value;
+            var bad = false;
+            if (!id) { fieldError("loginId", "Enter your mobile number or email."); bad = true; }
+            if (!pw) { fieldError("loginPass", "Enter your password."); bad = true; }
+            if (bad) return;
 
-        var signupBtn = document.getElementById("signupBtn");
-        if (signupBtn) {
-          signupBtn.addEventListener("click", function () {
-            var n = document.getElementById("suName").value.trim();
-            var m = document.getElementById("suMobile").value.trim();
-            var e = document.getElementById("suEmail").value.trim();
-            var p = document.getElementById("suPass").value;
-            var p2 = document.getElementById("suPass2").value;
-            if (!n) { AKF_TOAST("Please enter your name", "error"); return; }
-            if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
-            if (p.length < 6) { AKF_TOAST("Password must be at least 6 characters", "error"); return; }
-            if (p !== p2) { AKF_TOAST("Passwords do not match", "error"); return; }
-            AKF_USER.set({ name: n, mobile: m, email: e });
-            AKF_TOAST("Account created! Welcome to AK Fishers 🎉", "success");
-            setTimeout(function () { window.location.href = "/account"; }, 600);
-          });
-        }
-
-        var fpBtn = document.getElementById("fpBtn");
-        if (fpBtn) {
-          var step = 1;
-          fpBtn.addEventListener("click", function () {
-            if (step === 1) {
-              var m = document.getElementById("fpMobile").value.trim();
-              if (!/^\d{10}$/.test(m)) { AKF_TOAST("Enter a valid mobile number", "error"); return; }
-              document.getElementById("otpRow").style.display = "flex";
-              fpBtn.textContent = "Verify OTP";
-              step = 2;
-              AKF_TOAST("OTP sent to " + m, "info");
-            } else if (step === 2) {
-              var otp = Array.from(document.querySelectorAll("[data-otp]")).map(function (i) { return i.value; }).join("");
-              if (otp.length < 4) { AKF_TOAST("Enter the 4-digit OTP", "error"); return; }
-              document.getElementById("newPassField").style.display = "block";
-              fpBtn.textContent = "Reset Password";
-              step = 3;
-              AKF_TOAST("OTP verified", "success");
-            } else {
-              var np = document.getElementById("fpNewPass").value;
-              if (np.length < 6) { AKF_TOAST("Password must be at least 6 characters", "error"); return; }
-              AKF_TOAST("Password reset successfully! Please login", "success");
-              setTimeout(function () { renderAuth("login"); }, 800);
-            }
-          });
-          document.querySelectorAll("[data-otp]").forEach(function (inp, idx, arr) {
-            inp.addEventListener("input", function () {
-              if (this.value && idx < arr.length - 1) arr[idx + 1].focus();
+            var btn = document.getElementById("loginBtn");
+            setBusy(btn, true, "Logging in…");
+            AKF_USER.login(id, pw).then(function (res) {
+              if (res.ok) { window.location.href = "/account"; return; }
+              setBusy(btn, false);
+              if (!applyServerFieldErrors(res.fields, { identifier: "loginId", password: "loginPass" })) {
+                alertBox(res.message || "Login failed. Please try again.");
+              }
             });
-            inp.addEventListener("keydown", function (e) {
-              if (e.key === "Backspace" && !this.value && idx > 0) arr[idx - 1].focus();
+          });
+        }
+
+        var signupForm = document.getElementById("signupForm");
+        if (signupForm) {
+          signupForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (busy) return;
+            clearErrors();
+            var name = document.getElementById("suName").value.trim();
+            var mobile = document.getElementById("suMobile").value.trim();
+            var email = document.getElementById("suEmail").value.trim();
+            var p1 = document.getElementById("suPass").value;
+            var p2 = document.getElementById("suPass2").value;
+
+            var bad = false;
+            if (name.length < 2) { fieldError("suName", "Enter your full name."); bad = true; }
+            if (!/^[6-9]\d{9}$/.test(mobile)) { fieldError("suMobile", "Enter a valid 10-digit Indian mobile number."); bad = true; }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { fieldError("suEmail", "Enter a valid email address."); bad = true; }
+            if (p1.length < 8) { fieldError("suPass", "Password must be at least 8 characters."); bad = true; }
+            if (p2 !== p1) { fieldError("suPass2", "Passwords do not match."); bad = true; }
+            if (bad) return;
+
+            var btn = document.getElementById("signupBtn");
+            setBusy(btn, true, "Creating account…");
+            AKF_USER.signup({ name: name, phone: mobile, email: email, password: p1 }).then(function (res) {
+              if (res.ok) {
+                try { localStorage.removeItem("akf_user"); } catch (e2) {}
+                window.location.href = "/account";
+                return;
+              }
+              setBusy(btn, false);
+              if (res.error === "account_exists") {
+                alertBox(res.message);
+                fieldError("suMobile", "This number is already registered.");
+              } else if (!applyServerFieldErrors(res.fields, { phone: "suMobile", password: "suPass", name: "suName", email: "suEmail" })) {
+                alertBox(res.message || "Sign up failed. Please try again.");
+              }
             });
           });
         }
@@ -189,8 +272,8 @@
               '<div class="acct-layout">' +
                 '<aside class="acct-side">' +
                   '<div class="as-user">' +
-                    '<span class="as-avatar">' + (user.name ? user.name.charAt(0).toUpperCase() : "U") + '</span>' +
-                    '<span><span class="as-name">' + (user.name || "Customer") + '</span><br><span class="as-mail">' + (user.mobile || "") + '</span></span>' +
+                    '<span class="as-avatar">' + esc(user.name ? user.name.charAt(0).toUpperCase() : "U") + '</span>' +
+                    '<span><span class="as-name">' + esc(user.name || "Customer") + '</span><br><span class="as-mail">' + esc(user.phone || "") + '</span></span>' +
                   '</div>' +
                   '<nav>' +
                     navItems.map(function (n) {
@@ -208,15 +291,14 @@
             '</div>' +
           '</section>';
 
-        // Nav
         document.querySelectorAll("[data-panel]").forEach(function (a) {
           a.addEventListener("click", function (e) {
             e.preventDefault();
+            if (busy) return;
             var p = a.getAttribute("data-panel");
             if (p === "logout") {
-              AKF_USER.clear();
-              AKF_TOAST("Logged out successfully", "info");
-              setTimeout(function () { window.location.href = "/account"; }, 500);
+              setBusy(a, true);
+              AKF_USER.logout().then(function () { window.location.href = "/account"; });
               return;
             }
             document.querySelectorAll("[data-panel]").forEach(function (x) { x.classList.remove("active"); });
@@ -227,21 +309,39 @@
           });
         });
 
-        // Save profile
         var saveBtn = document.getElementById("saveProfile");
         if (saveBtn) {
           saveBtn.addEventListener("click", function () {
+            if (busy) return;
+            root.querySelectorAll('#panel-profile [data-field]').forEach(function (f) {
+              f.classList.remove("has-error"); var e = f.querySelector(".field-error"); if (e) e.textContent = "";
+            });
+            alertBox("");
             var n = document.getElementById("pfName").value.trim();
-            var m = document.getElementById("pfMobile").value.trim();
-            var e = document.getElementById("pfEmail").value.trim();
-            if (!n || !/^\d{10}$/.test(m)) { AKF_TOAST("Check name and mobile", "error"); return; }
-            AKF_USER.set({ name: n, mobile: m, email: e });
-            AKF_TOAST("Profile updated", "success");
-            setTimeout(function () { renderDashboard("profile"); }, 500);
+            var em = document.getElementById("pfEmail").value.trim();
+            var bad = false;
+            if (n.length < 2) { fieldError("pfName", "Enter your full name."); bad = true; }
+            if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { fieldError("pfEmail", "Enter a valid email address."); bad = true; }
+            if (bad) return;
+
+            setBusy(saveBtn, true, "Saving…");
+            AKF_USER.updateProfile({ name: n, email: em }).then(function (res) {
+              setBusy(saveBtn, false);
+              if (res.ok) {
+                user = res.user;
+                var pm = document.getElementById("profileMsg");
+                if (pm) { pm.className = "form-alert ok"; pm.textContent = "Profile updated."; }
+                setTimeout(function () { renderDashboard("profile"); }, 700);
+              } else if (res.error === "unauthenticated") {
+                window.location.href = "/account";
+              } else if (!applyServerFieldErrors(res.fields, { email: "pfEmail", name: "pfName" })) {
+                var pm2 = document.getElementById("profileMsg");
+                if (pm2) { pm2.className = "form-alert err"; pm2.textContent = res.message || "Could not save."; }
+              }
+            });
           });
         }
 
-        // Add address
         var addAddr = document.getElementById("addAddress");
         if (addAddr) {
           addAddr.addEventListener("click", function () {
@@ -250,7 +350,8 @@
             var area = document.getElementById("adArea").value.trim();
             var pin = document.getElementById("adPin").value.trim();
             if (!flat || !bld || !area || !/^\d{6}$/.test(pin)) { AKF_TOAST("Fill all address fields correctly", "error"); return; }
-            var list = JSON.parse(localStorage.getItem("akf_addresses") || "[]");
+            var list = [];
+            try { list = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (e2) {}
             list.push({ flat: flat, building: bld, area: area, pin: pin, label: "Home" });
             localStorage.setItem("akf_addresses", JSON.stringify(list));
             AKF_TOAST("Address saved", "success");
@@ -258,11 +359,11 @@
           });
         }
 
-        // Delete address
         document.querySelectorAll("[data-del-addr]").forEach(function (b) {
           b.addEventListener("click", function () {
             var idx = parseInt(b.getAttribute("data-del-addr"), 10);
-            var list = JSON.parse(localStorage.getItem("akf_addresses") || "[]");
+            var list = [];
+            try { list = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (e2) {}
             list.splice(idx, 1);
             localStorage.setItem("akf_addresses", JSON.stringify(list));
             AKF_TOAST("Address removed", "info");
@@ -275,9 +376,12 @@
         return '<h2>My Profile</h2>' +
           '<p class="ap-sub">Manage your personal information.</p>' +
           '<div class="checkout-card" style="max-width:560px">' +
-            '<div class="field"><label>Full Name</label><input id="pfName" value="' + (user.name || "") + '"></div>' +
-            '<div class="field"><label>Mobile Number</label><input id="pfMobile" inputmode="numeric" maxlength="10" value="' + (user.mobile || "") + '"></div>' +
-            '<div class="field"><label>Email</label><input id="pfEmail" type="email" value="' + (user.email || "") + '"></div>' +
+            '<div id="profileMsg" class="form-alert" role="alert" aria-live="polite"></div>' +
+            field("pfName", "Full Name", { type: "text", autocomplete: "name", value: user.name || "" }) +
+            '<div class="field"><label for="pfMobile">Mobile Number</label>' +
+              '<input id="pfMobile" type="tel" value="' + esc(user.phone || "") + '" readonly aria-readonly="true">' +
+              '<div class="hint">To change your mobile number, contact us on WhatsApp.</div></div>' +
+            field("pfEmail", "Email", { type: "email", inputmode: "email", autocomplete: "email", optional: true, value: user.email || "" }) +
             '<button class="btn btn--primary" id="saveProfile">Save Changes</button>' +
           '</div>';
       }
@@ -285,9 +389,9 @@
       function panelAddresses(addresses) {
         var cards = addresses.length ? addresses.map(function (a, i) {
           return '<div class="addr-card" style="margin-bottom:14px">' +
-            '<span class="ac-tag">' + a.label + '</span>' +
-            '<b>' + a.flat + '</b>' +
-            '<p>' + a.building + ', ' + a.area + ', Mumbai, Maharashtra ' + a.pin + '</p>' +
+            '<span class="ac-tag">' + esc(a.label) + '</span>' +
+            '<b>' + esc(a.flat) + '</b>' +
+            '<p>' + esc(a.building) + ', ' + esc(a.area) + ', Mumbai, Maharashtra ' + esc(a.pin) + '</p>' +
             '<div class="ac-actions"><button data-del-addr="' + i + '">Remove</button></div>' +
           '</div>';
         }).join("") : '<p class="text-muted">No saved addresses yet.</p>';
@@ -298,10 +402,10 @@
             '<div>' + cards + '</div>' +
             '<div class="checkout-card">' +
               '<h3 style="font-size:16px;margin-bottom:14px">Add New Address</h3>' +
-              '<div class="field"><label>House / Flat</label><input id="adFlat" placeholder="e.g. 402"></div>' +
-              '<div class="field"><label>Building / Society</label><input id="adBld" placeholder="Building name"></div>' +
-              '<div class="field"><label>Area / Locality</label><input id="adArea" placeholder="e.g. Bandra West"></div>' +
-              '<div class="field"><label>Pincode</label><input id="adPin" inputmode="numeric" maxlength="6" placeholder="400050"></div>' +
+              '<div class="field"><label for="adFlat">House / Flat</label><input id="adFlat" placeholder="e.g. 402"></div>' +
+              '<div class="field"><label for="adBld">Building / Society</label><input id="adBld" placeholder="Building name"></div>' +
+              '<div class="field"><label for="adArea">Area / Locality</label><input id="adArea" placeholder="e.g. Bandra West"></div>' +
+              '<div class="field"><label for="adPin">Pincode</label><input id="adPin" inputmode="numeric" maxlength="6" placeholder="400050"></div>' +
               '<button class="btn btn--primary btn--block" id="addAddress">Save Address</button>' +
             '</div>' +
           '</div>';
@@ -321,13 +425,13 @@
             var statusClass = o.status === "delivered" ? "delivered" : o.status === "cancelled" ? "cancelled" : o.status === "out" ? "out" : o.status === "packed" ? "packed" : "confirmed";
             return '<div class="order-card">' +
               '<div class="oc-head">' +
-                '<span><span class="oc-id">#' + o.id + '</span><br><span class="oc-date">' + o.date + ' · ' + o.slot + '</span></span>' +
-                '<span class="oc-status ' + statusClass + '">' + o.status.charAt(0).toUpperCase() + o.status.slice(1) + '</span>' +
+                '<span><span class="oc-id">#' + esc(o.id) + '</span><br><span class="oc-date">' + esc(o.date) + ' · ' + esc(o.slot) + '</span></span>' +
+                '<span class="oc-status ' + statusClass + '">' + esc(o.status.charAt(0).toUpperCase() + o.status.slice(1)) + '</span>' +
               '</div>' +
               '<div class="oc-items">' +
-                o.items.map(function (i) { return '<img src="' + i.img + '" alt="' + i.name + '" title="' + i.name + '">'; }).join("") +
+                o.items.map(function (i) { return '<img src="' + esc(i.img) + '" alt="' + esc(i.name) + '" title="' + esc(i.name) + '">'; }).join("") +
               '</div>' +
-              '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + o.payment + '</div>' +
+              '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + esc(o.payment) + '</div>' +
             '</div>';
           }).join("");
       }
@@ -345,7 +449,7 @@
         var steps = ["Order Confirmed", "Being Cleaned & Packed", "Out For Delivery", "Delivered"];
         var currentIdx = active.status === "confirmed" ? 0 : active.status === "packed" ? 1 : active.status === "out" ? 2 : 3;
         return '<h2>Order Tracking</h2>' +
-          '<p class="ap-sub">Order <b>#' + active.id + '</b> · ' + active.deliveryDate + ' · ' + active.slot + '</p>' +
+          '<p class="ap-sub">Order <b>#' + esc(active.id) + '</b> · ' + esc(active.deliveryDate) + ' · ' + esc(active.slot) + '</p>' +
           '<div class="checkout-card">' +
             '<div class="track-steps">' +
               steps.map(function (s, i) {
@@ -355,22 +459,36 @@
                 '</div>';
               }).join("") +
             '</div>' +
-            '<div class="cs-note mt-16">📦 Delivering to: ' + active.address + '</div>' +
+            '<div class="cs-note mt-16">📦 Delivering to: ' + esc(active.address) + '</div>' +
           '</div>' +
           '<div class="order-card">' +
-            '<div class="oc-head"><span class="oc-id">#' + active.id + '</span><span class="oc-date">' + active.date + '</span></div>' +
-            '<div class="oc-items">' + active.items.map(function (i) { return '<img src="' + i.img + '" alt="">'; }).join("") + '</div>' +
-            '<div class="oc-total">Total: <b>' + akfFormatINR(active.total) + '</b> · ' + active.payment + '</div>' +
+            '<div class="oc-head"><span class="oc-id">#' + esc(active.id) + '</span><span class="oc-date">' + esc(active.date) + '</span></div>' +
+            '<div class="oc-items">' + active.items.map(function (i) { return '<img src="' + esc(i.img) + '" alt="">'; }).join("") + '</div>' +
+            '<div class="oc-total">Total: <b>' + akfFormatINR(active.total) + '</b> · ' + esc(active.payment) + '</div>' +
           '</div>';
       }
 
-      /* ---------- Init ---------- */
+      /* ---------- Init: ask the server who we are, then render ---------- */
       var hash = window.location.hash.replace("#", "");
-      if (user) {
-        renderDashboard(hash || "profile");
-      } else {
-        renderAuth(hash === "signup" ? "signup" : hash === "forgot" ? "forgot" : "login");
-      }
+      AKF_USER.refresh().then(function (u) {
+        user = u;
+        if (user) {
+          renderDashboard(["profile", "addresses", "orders", "tracking"].indexOf(hash) > -1 ? hash : "profile");
+        } else if (AKF_USER.backendReady === false) {
+          renderAuth("login");
+          alertBox("Accounts are being set up right now — please check back shortly. You can still place an order as a guest.", "err");
+          var f = root.querySelector(".auth-card form");
+          if (f) f.querySelectorAll("input, button").forEach(function (el) { el.disabled = true; });
+        } else {
+          var startMode = hash === "signup" ? "signup" : hash === "forgot" ? "forgot" : "login";
+          var haveLegacy = legacy && (legacy.name || legacy.mobile);
+          if (haveLegacy && startMode === "login") startMode = "signup";   // returning device, no real account yet
+          renderAuth(startMode);
+          if (haveLegacy && startMode === "signup") {
+            alertBox("We've upgraded to secure accounts. Create yours below — your saved details are filled in.", "ok");
+          }
+        }
+      });
     })();
   </script>
 </body>

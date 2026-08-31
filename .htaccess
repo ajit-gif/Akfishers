@@ -11,6 +11,7 @@ DirectoryIndex index.html
 
   # Canonical target for every redirect below: https://akfishers.com
   # Each rule forces scheme + host + clean path in ONE hop (no redirect chains).
+  # The /api/ backend is never rewritten (only HTTPS + www canonicalisation apply).
 
   # ---------------------------------------------------------
   # 1. Force HTTPS (also upgrades behind Hostinger's proxy)
@@ -20,28 +21,31 @@ DirectoryIndex index.html
   RewriteRule ^ https://akfishers.com%{REQUEST_URI} [L,R=301]
 
   # ---------------------------------------------------------
-  # 2. /index.html  or  /index  ->  /
+  # 2. www  ->  non-www
+  # ---------------------------------------------------------
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # ---------------------------------------------------------
+  # 3. /index.html  or  /index  ->  /
   # ---------------------------------------------------------
   RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
   RewriteRule ^ https://akfishers.com/ [L,R=301]
 
+  # ---- everything below leaves /api/ untouched ----
+  RewriteRule ^api/ - [L]
+
   # ---------------------------------------------------------
-  # 3. /page.html  ->  /page   (single hop, forces canonical host)
+  # 4. /page.html  ->  /page   (single hop, forces canonical host)
   # ---------------------------------------------------------
   RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
   RewriteRule ^ https://akfishers.com/%1 [L,R=301]
 
   # ---------------------------------------------------------
-  # 4. Strip trailing slash, except the root
+  # 5. Strip trailing slash, except the root
   # ---------------------------------------------------------
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.+)/$ https://akfishers.com/$1 [L,R=301]
-
-  # ---------------------------------------------------------
-  # 5. www  ->  non-www  (catch-all for anything not handled above)
-  # ---------------------------------------------------------
-  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
   # ---------------------------------------------------------
   # 6. Serve /page internally from /page.html  (no redirect)
@@ -51,6 +55,23 @@ DirectoryIndex index.html
   RewriteCond %{DOCUMENT_ROOT}/$1.html -f
   RewriteRule ^(.+?)/?$ /$1.html [L]
 </IfModule>
+
+# ============================================================
+#  Protect backend internals
+# ============================================================
+# Deny direct access to SQL dumps and the /db folder
+<FilesMatch "\.(sql|sqlite|md)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 ^/db(/|$)
+
+# Deny the API config files even if one is ever placed under /api
+<FilesMatch "^(config|_bootstrap)\.php$">
+  Require all denied
+</FilesMatch>
+<Files "config.sample.php">
+  Require all denied
+</Files>
 
 # ============================================================
 #  Custom error page

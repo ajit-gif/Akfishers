@@ -138,10 +138,111 @@
     has: function (id) { return readWish().indexOf(id) > -1; }
   };
 
+  /* ----------------------------------------------------------------
+     User / auth  —  the server (PHP session cookie) is the source of
+     truth. localStorage holds only a non-sensitive display cache so
+     the header can render instantly; it is re-checked against
+     /api/me.php on every page load.
+  ---------------------------------------------------------------- */
+  var GUEST_KEY = "akf_guest";
+  var API = "/api/";
+
+  function apiFetch(path, opts) {
+    opts = opts || {};
+    opts.credentials = "same-origin";
+    opts.headers = Object.assign({ "Accept": "application/json" }, opts.headers || {});
+    var ctrl = window.AbortController ? new AbortController() : null;
+    if (ctrl) { opts.signal = ctrl.signal; setTimeout(function () { ctrl.abort(); }, 15000); }
+    return fetch(API + path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (body) {
+        return { status: r.status, ok: r.ok, body: body || {} };
+      });
+    }).catch(function (err) {
+      var timedOut = err && err.name === "AbortError";
+      return {
+        status: 0, ok: false,
+        body: { error: timedOut ? "timeout" : "network",
+                message: timedOut
+                  ? "The request timed out. Please try again."
+                  : "Can't reach the server. Check your connection and try again." }
+      };
+    });
+  }
+
+  function cacheUser(u) {
+    try {
+      if (u) localStorage.setItem(USER_KEY, JSON.stringify(u));
+      else localStorage.removeItem(USER_KEY);
+    } catch (e) {}
+    window.dispatchEvent(new CustomEvent("akf:userchange", { detail: u || null }));
+  }
+
   window.AKF_USER = {
-    get: function () { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch (e) { return null; } },
-    set: function (u) { localStorage.setItem(USER_KEY, JSON.stringify(u)); },
-    clear: function () { localStorage.removeItem(USER_KEY); }
+    /* authenticated user (display cache); null if not logged in */
+    get: function () { try { return JSON.parse(localStorage.getItem(USER_KEY)) || null; } catch (e) { return null; } },
+
+    /* best-effort details for pre-filling forms: logged-in user, else last guest */
+    prefill: function () {
+      var u = window.AKF_USER.get();
+      if (u) return u;
+      try { return JSON.parse(localStorage.getItem(GUEST_KEY)) || null; } catch (e) { return null; }
+    },
+    saveGuest: function (d) { try { localStorage.setItem(GUEST_KEY, JSON.stringify(d)); } catch (e) {} },
+
+    /* true once the server has answered /api/me.php with a real status */
+    backendReady: null,
+
+    /* re-verify session with the server; updates the cache. Never rejects. */
+    refresh: function () {
+      return apiFetch("me.php").then(function (res) {
+        window.AKF_USER.backendReady = (res.status !== 0 && res.status !== 503);
+        var u = res.ok && res.body && res.body.user ? res.body.user : null;
+        cacheUser(u);
+        return u;
+      }).catch(function () {
+        window.AKF_USER.backendReady = false;
+        return window.AKF_USER.get();   // offline / timeout: keep showing the cache
+      });
+    },
+
+    login: function (identifier, password) {
+      return apiFetch("login.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: identifier, password: password })
+      }).then(function (res) {
+        if (res.ok && res.body.user) { cacheUser(res.body.user); return { ok: true, user: res.body.user }; }
+        return { ok: false, status: res.status, error: res.body.error || "error", message: res.body.message || "Login failed.", fields: res.body.fields };
+      });
+    },
+
+    signup: function (payload) {
+      return apiFetch("signup.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        if (res.ok && res.body.user) { cacheUser(res.body.user); return { ok: true, user: res.body.user }; }
+        return { ok: false, status: res.status, error: res.body.error || "error", message: res.body.message || "Sign up failed.", fields: res.body.fields };
+      });
+    },
+
+    updateProfile: function (payload) {
+      return apiFetch("profile.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        if (res.ok && res.body.user) { cacheUser(res.body.user); return { ok: true, user: res.body.user }; }
+        return { ok: false, status: res.status, error: res.body.error || "error", message: res.body.message || "Update failed.", fields: res.body.fields };
+      });
+    },
+
+    logout: function () {
+      return apiFetch("logout.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+        .catch(function () {})
+        .then(function () { cacheUser(null); });
+    }
   };
 
   /* ---------- Toast ---------- */
@@ -398,6 +499,10 @@
   document.addEventListener("DOMContentLoaded", function () {
     renderHeader();
     renderFooter();
+
+    // Keep the header in sync with the auth state, then re-verify with the server.
+    window.addEventListener("akf:userchange", function () { renderHeader(); });
+    AKF_USER.refresh();
 
     // Restore pincode
     var savedPin = localStorage.getItem("akf_pincode");

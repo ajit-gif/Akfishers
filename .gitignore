@@ -13,3 +13,8 @@ dist/
 .env
 .env.*
 *.local
+
+# API secrets (real config lives ABOVE public_html)
+/api/config.php
+akf-config.php
+/db/*.sqlite
