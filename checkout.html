@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=9">
+  <link rel="stylesheet" href="styles/shared.css?v=10">
 </head>
 <body>
 
@@ -38,6 +38,43 @@
 
   <footer class="site-footer"></footer>
 
+  <!-- Review & confirm modal -->
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal">
+      <h3>Review your order</h3>
+      <p class="modal-sub">Please check everything before we start preparing your fresh catch.</p>
+
+      <div id="confirmItems" class="order-summary-items" style="max-height:230px;overflow-y:auto;margin-bottom:12px"></div>
+
+      <div style="background:var(--off-white);border-radius:var(--r-md);padding:12px 14px;font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:14px">
+        <div><b>Deliver to:</b> <span id="confirmAddr"></span></div>
+        <div><b>When:</b> <span id="confirmWhen"></span></div>
+        <div><b>Payment:</b> <span id="confirmPay"></span></div>
+      </div>
+
+      <div class="cs-row cs-total" style="margin-bottom:14px"><span>Amount payable</span><span id="confirmTotal"></span></div>
+
+      <div class="cs-note" style="background:#fdf3e0;color:#b97a12;line-height:1.7">
+        ⓘ Please note before confirming:
+        <ul style="margin:6px 0 0 16px;padding:0">
+          <li>Orders are prepared fresh — please order <b>at least 1 day in advance</b>.</li>
+          <li>Seafood is sold by weight; the <b>final bill may vary slightly (±10%)</b> with natural size variation and daily market rate. We confirm the final amount on call.</li>
+          <li>You can <b>cancel free of charge within 10 minutes</b> of placing the order, from this page or “My Account”. After that, please call us.</li>
+        </ul>
+      </div>
+
+      <label style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-soft);margin:14px 0 4px;cursor:pointer">
+        <input type="checkbox" id="confirmAck" style="margin-top:3px">
+        <span>I understand and agree to the above.</span>
+      </label>
+
+      <div class="flex gap-12 mt-16">
+        <button class="btn btn--primary btn--block" id="confirmPlace" disabled>Confirm &amp; Place Order</button>
+      </div>
+      <button class="btn btn--ghost btn--block mt-8" data-close-confirm>Go back &amp; edit</button>
+    </div>
+  </div>
+
   <!-- Order success modal -->
   <div class="modal-backdrop" id="successModal">
     <div class="modal" style="text-align:center">
@@ -46,17 +83,22 @@
       </div>
       <h3>Order Placed Successfully!</h3>
       <p class="modal-sub">Your fresh seafood order <b id="orderId">#AKF-0000</b> is confirmed.<br>We'll call you shortly to confirm the delivery slot.</p>
-      <div style="background:var(--off-white);border-radius:var(--r-md);padding:14px;font-size:13.5px;color:var(--ink-soft);margin-bottom:20px">
+      <div style="background:var(--off-white);border-radius:var(--r-md);padding:14px;font-size:13.5px;color:var(--ink-soft);margin-bottom:16px">
         Expected delivery: <b id="orderDate"></b> · <span id="orderSlot"></span><br>
         Payment: <b id="orderPay"></b>
+      </div>
+      <div id="cancelBox" class="cs-note" style="display:none;background:#fdf3e0;color:#b97a12;margin-bottom:14px">
+        Changed your mind? You can cancel this order for free for the next
+        <b id="cancelCountdown">10:00</b>.
+        <button class="btn btn--ghost btn--sm" id="cancelOrderBtn" style="margin-top:8px">Cancel this order</button>
       </div>
       <a class="btn btn--primary btn--block" id="trackLink" href="/account#orders">Track My Order</a>
       <a class="btn btn--ghost btn--block mt-8" href="/shop">Continue Shopping</a>
     </div>
   </div>
 
-  <script src="scripts/products.js?v=9"></script>
-  <script src="scripts/app.js?v=9"></script>
+  <script src="scripts/products.js?v=10"></script>
+  <script src="scripts/app.js?v=10"></script>
   <script>
     (function () {
       "use strict";
@@ -282,6 +324,7 @@
       });
 
       var placing = false;
+      var pending = null;   // validated order context, awaiting confirmation
 
       function showSuccess(o) {
         // keep a device-local copy so guests can see the order in "My Account"
@@ -312,11 +355,14 @@
         if (track) track.href = "/account#orders";
         document.getElementById("successModal").classList.add("open");
         AKF_CART.clear();
+
+        // 10-minute self-cancel window
+        startCancelWindow(o.id, o.trackToken || "", o.cancelSecondsLeft || 600);
       }
 
+      /* ---- Step 1: validate, then show the review & confirm modal ---- */
       function placeOrder() {
         if (placing) return;
-        var btn = document.getElementById("placeOrder");
         var name = document.getElementById("fullName").value.trim();
         var mobile = document.getElementById("mobile").value.trim();
         var email = document.getElementById("email").value.trim();
@@ -332,32 +378,62 @@
         if (!selDate) { AKF_TOAST("Please select a delivery date", "error"); return; }
         if (!selSlot) { AKF_TOAST("Please select a delivery slot", "error"); return; }
 
-        placing = true;
-        if (btn) { btn.disabled = true; btn.classList.add("is-busy"); }
-
-        var payload = {
+        pending = {
           name: name, mobile: mobile, email: email,
-          flat: flat, building: building, area: area, pincode: pin,
-          slot: selSlot, deliveryDate: selDate,
-          payment: selPay === "online" ? "online" : "cod",
-          coupon: appliedCoupon ? appliedCoupon.code : "",
-          items: items.map(function (x) {
-            return { id: x.product.id, weight: x.item.weight, cut: x.item.cut, qty: x.item.qty };
-          })
+          flat: flat, building: building, area: area, pin: pin, areaInfo: areaInfo,
+          payload: {
+            name: name, mobile: mobile, email: email,
+            flat: flat, building: building, area: area, pincode: pin,
+            slot: selSlot, deliveryDate: selDate,
+            payment: selPay === "online" ? "online" : "cod",
+            coupon: appliedCoupon ? appliedCoupon.code : "",
+            items: items.map(function (x) {
+              return { id: x.product.id, weight: x.item.weight, cut: x.item.cut, qty: x.item.qty };
+            })
+          }
         };
 
-        var done = function () { placing = false; if (btn) { btn.disabled = false; btn.classList.remove("is-busy"); } };
+        // Fill the review modal
+        document.getElementById("confirmItems").innerHTML = items.map(function (x) {
+          var w = x.item.weight, wl = w >= 1000 ? (w / 1000) + " kg" : w + " g";
+          return '<div class="os-item"><img src="' + x.product.img + '" alt="">' +
+            '<div><div class="osi-name">' + x.product.name + '</div>' +
+            '<div class="osi-meta">' + wl + ' · ' + x.item.cut + ' · Qty ' + x.item.qty + '</div></div>' +
+            '<span class="osi-price">' + akfFormatINR(x.lineTotal) + '</span></div>';
+        }).join("");
+        var dLabel = new Date(selDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+        document.getElementById("confirmAddr").textContent = flat + ", " + building + ", " + area + ", " + areaInfo.area + " " + pin;
+        document.getElementById("confirmWhen").textContent = dLabel + " · " + selSlot;
+        document.getElementById("confirmPay").textContent = selPay === "online" ? "Online Payment" : "Cash On Delivery";
+        document.getElementById("confirmTotal").textContent = akfFormatINR(total);
+
+        var ack = document.getElementById("confirmAck");
+        var cbtn = document.getElementById("confirmPlace");
+        ack.checked = false; cbtn.disabled = true; cbtn.classList.remove("is-busy");
+        document.getElementById("confirmModal").classList.add("open");
+      }
+
+      /* ---- Step 2: actually submit the confirmed order ---- */
+      function submitOrder() {
+        if (placing || !pending) return;
+        var p = pending;
+        var btn = document.getElementById("confirmPlace");
+        placing = true;
+        btn.disabled = true; btn.classList.add("is-busy");
+
+        var done = function () { placing = false; btn.disabled = false; btn.classList.remove("is-busy"); };
+        var closeConfirm = function () { document.getElementById("confirmModal").classList.remove("open"); };
         var localFallback = function () {
-          // backend not ready / offline — place the order locally so checkout still works
-          var t = subtotal - discount + (subtotal >= 999 ? 0 : areaInfo.charge);
+          var t = subtotal - discount + (subtotal >= 999 ? 0 : p.areaInfo.charge);
+          closeConfirm();
           showSuccess({
             id: "AKF-" + String(Math.floor(100000 + Math.random() * 899999)),
             subtotal: subtotal, discount: discount, coupon: appliedCoupon ? appliedCoupon.code : "",
-            deliveryCharge: subtotal >= 999 ? 0 : areaInfo.charge, total: t,
-            deliveryDate: selDate, slot: selSlot,
+            deliveryCharge: subtotal >= 999 ? 0 : p.areaInfo.charge, total: t,
+            deliveryDate: selDate, slot: selSlot, cancelSecondsLeft: 600,
             payment: selPay === "online" ? "Online Payment" : "Cash On Delivery",
-            address: flat + ", " + building + ", " + area + ", " + areaInfo.area + " " + pin,
-            name: name, mobile: mobile
+            address: p.flat + ", " + p.building + ", " + p.area + ", " + p.areaInfo.area + " " + p.pin,
+            name: p.name, mobile: p.mobile
           });
         };
 
@@ -366,7 +442,7 @@
         fetch("/api/orders.php", {
           method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(p.payload),
           signal: ctrl ? ctrl.signal : undefined
         }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
@@ -374,12 +450,13 @@
           done();
           if (res.status === 200 && res.body.order) {
             var o = res.body.order;
+            closeConfirm();
             showSuccess({
               id: o.id, trackToken: o.trackToken,
               subtotal: o.subtotal, discount: o.discount, coupon: o.coupon,
-              deliveryCharge: o.deliveryCharge, total: o.total,
+              deliveryCharge: o.deliveryCharge, total: o.total, cancelSecondsLeft: o.cancelSecondsLeft,
               deliveryDate: o.deliveryDate, slot: o.slot, payment: o.payment, address: o.address,
-              items: o.items, name: name, mobile: mobile
+              items: o.items, name: p.name, mobile: p.mobile
             });
           } else if (res.status === 503 || res.status === 0) {
             localFallback();
@@ -392,6 +469,60 @@
         }).catch(function () { done(); localFallback(); });
       }
 
+      /* ---- 10-minute customer self-cancel ---- */
+      function startCancelWindow(id, token, seconds) {
+        var box = document.getElementById("cancelBox");
+        var cd = document.getElementById("cancelCountdown");
+        var btn = document.getElementById("cancelOrderBtn");
+        if (!box) return;
+        box.style.display = "";
+        var endAt = Date.now() + seconds * 1000;
+        var timer = setInterval(function () {
+          var left = Math.round((endAt - Date.now()) / 1000);
+          if (left <= 0) { clearInterval(timer); box.style.display = "none"; return; }
+          cd.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+        }, 1000);
+        btn.onclick = function () {
+          if (!confirm("Cancel this order? This can't be undone.")) return;
+          btn.disabled = true; btn.classList.add("is-busy");
+          fetch("/api/orders.php", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ op: "cancel", id: id, token: token })
+          }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
+            .then(function (res) {
+              btn.disabled = false; btn.classList.remove("is-busy");
+              if (res.status === 200) {
+                clearInterval(timer);
+                // reflect it in the local copy
+                try {
+                  var arr = JSON.parse(localStorage.getItem("akf_orders")) || [];
+                  arr.forEach(function (o) { if (o.id === id) o.status = "cancelled"; });
+                  localStorage.setItem("akf_orders", JSON.stringify(arr));
+                } catch (e) {}
+                box.innerHTML = '<b>Order cancelled.</b> Any online payment will be refunded in 3–5 business days.';
+                document.querySelector("#successModal h3").textContent = "Order Cancelled";
+              } else {
+                AKF_TOAST((res.body && res.body.message) || "Could not cancel. Please call us.", "error");
+              }
+            }).catch(function () {
+              btn.disabled = false; btn.classList.remove("is-busy");
+              AKF_TOAST("Could not cancel. Please call us on +91 81081 06522.", "error");
+            });
+        };
+      }
+
+      // confirm modal wiring
+      document.getElementById("confirmAck").addEventListener("change", function () {
+        document.getElementById("confirmPlace").disabled = !this.checked;
+      });
+      document.getElementById("confirmPlace").addEventListener("click", submitOrder);
+      document.querySelector("[data-close-confirm]").addEventListener("click", function () {
+        document.getElementById("confirmModal").classList.remove("open");
+      });
+      document.getElementById("confirmModal").addEventListener("click", function (e) {
+        if (e.target === this && !placing) this.classList.remove("open");
+      });
       document.getElementById("successModal").addEventListener("click", function (e) {
         if (e.target === this) this.classList.remove("open");
       });

@@ -26,7 +26,7 @@ $genericFail = function () use ($db, $phone, $email) {
 if ($phone === null && !$email) $genericFail();
 
 $stmt = $db->prepare(
-    'SELECT u.id, u.public_id, u.phone, u.email, u.password_hash, u.status,
+    'SELECT u.id, u.public_id, u.phone, u.email, u.password_hash, u.status, u.role,
             u.failed_logins, u.locked_until, COALESCE(p.full_name, "") AS full_name
        FROM users u
        LEFT JOIN user_profiles p ON p.user_id = u.id

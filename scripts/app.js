@@ -184,7 +184,7 @@
     /* best-effort details for pre-filling forms: logged-in user, else last guest */
     prefill: function () {
       var u = window.AKF_USER.get();
-      if (u) return u;
+      if (u && !u.isAdmin) return u;      // admins shop as guests, not as "the customer"
       try { return JSON.parse(localStorage.getItem(GUEST_KEY)) || null; } catch (e) { return null; }
     },
     saveGuest: function (d) { try { localStorage.setItem(GUEST_KEY, JSON.stringify(d)); } catch (e) {} },
@@ -280,7 +280,9 @@
     if (!header) return;
 
     var user = AKF_USER.get();
-    var accountLabel = user ? (user.name || "Account").split(" ")[0] : "Login";
+    var isAdmin = !!(user && user.isAdmin);
+    var accountHref = isAdmin ? "/admin" : "/account";
+    var accountLabel = isAdmin ? "Admin" : (user ? (user.name || "Account").split(" ")[0] : "Login");
 
     header.innerHTML =
       '<div class="top-strip">' +
@@ -307,7 +309,7 @@
             '<div class="search-suggest" data-search-suggest></div>' +
           '</div>' +
           '<div class="header-actions">' +
-            '<a class="h-action" href="/account" title="Account">' + ICONS.user + '<span>' + accountLabel + '</span></a>' +
+            '<a class="h-action" href="' + accountHref + '" title="Account">' + ICONS.user + '<span>' + accountLabel + '</span></a>' +
             '<a class="h-action" href="/cart" title="Cart">' + ICONS.cart + '<span>Cart</span><span class="cart-count" style="display:none">0</span></a>' +
           '</div>' +
         '</div>' +

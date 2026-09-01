@@ -6,6 +6,15 @@ require_method('GET', 'POST');
 
 $SLOTS = ['7 AM – 11 AM', '11 AM – 3 PM', '3 PM – 7 PM', '7 PM – 10 PM'];
 
+/* Customers may cancel their own order online within this window of placing it. */
+const CANCEL_WINDOW = 600; // seconds (10 minutes)
+
+function cancel_seconds_left(array $r): int {
+    if (($r['status'] ?? '') !== 'confirmed') return 0;
+    $left = CANCEL_WINDOW - (time() - strtotime((string)$r['created_at']));
+    return $left > 0 ? $left : 0;
+}
+
 function order_row_public(array $r, bool $withToken = false): array {
     $o = [
         'id'            => $r['public_id'],
@@ -21,6 +30,7 @@ function order_row_public(array $r, bool $withToken = false): array {
         'deliveryCharge'=> (int)$r['delivery_charge'],
         'total'         => (int)$r['total'],
         'items'         => json_decode($r['items_json'], true) ?: [],
+        'cancelSecondsLeft' => cancel_seconds_left($r),
     ];
     if ($withToken) $o['trackToken'] = $r['track_token'];
     return $o;
@@ -34,10 +44,45 @@ if (method() === 'GET') {
     ok(['orders' => array_map(fn($r) => order_row_public($r), $stmt->fetchAll())]);
 }
 
-/* ================= POST  — place an order (guest OR logged in) ================= */
+/* ================= POST ================= */
 require_same_origin();
-rate_limit($db, 'order', 12, 3600);
 $in = body_json();
+
+/* ---- POST { op:"cancel", id, token?, phone? } — customer self-cancel ---- */
+if (($in['op'] ?? '') === 'cancel') {
+    $oid = strtoupper(str_field($in['id'] ?? '', 20));
+    if (!preg_match('/^AKF-\d{6}$/', $oid)) fail(400, 'validation', 'Invalid order id.');
+
+    $me  = current_user($db);
+    $tok = str_field($in['token'] ?? '', 64);
+    $ph  = normalize_phone($in['phone'] ?? '');
+
+    $stmt = $db->prepare('SELECT id, user_id, track_token, cust_phone, status, created_at FROM orders WHERE public_id = ?');
+    $stmt->execute([$oid]);
+    $o = $stmt->fetch();
+    if (!$o) fail(404, 'not_found', 'Order not found.');
+
+    $owns = ($me && (int)$o['user_id'] === (int)$me['id'])
+        || ($tok !== '' && hash_equals((string)$o['track_token'], $tok))
+        || ($ph !== null && hash_equals((string)$o['cust_phone'], $ph));
+    if (!$owns) fail(403, 'forbidden', "You can't cancel this order.");
+
+    if ($o['status'] === 'cancelled') ok(['order' => ['id' => $oid, 'status' => 'cancelled']]);
+    if ($o['status'] !== 'confirmed') {
+        fail(409, 'too_late', 'This order is already being prepared and can no longer be cancelled online. Please call us on +91 81081 06522.');
+    }
+    if (time() - strtotime((string)$o['created_at']) > CANCEL_WINDOW) {
+        fail(409, 'window_closed', 'The 10-minute cancellation window has passed. Please call us on +91 81081 06522 to cancel.');
+    }
+
+    $db->prepare('UPDATE orders SET status = "cancelled", updated_at = ? WHERE id = ?')
+       ->execute([gmdate('Y-m-d H:i:s'), (int)$o['id']]);
+    error_log('[akf-order] ' . $oid . ' cancelled by customer');
+    ok(['order' => ['id' => $oid, 'status' => 'cancelled']]);
+}
+
+/* ---- otherwise: place a new order (guest OR logged in) ---- */
+rate_limit($db, 'order', 12, 3600);
 
 $cat  = load_catalog();
 $prod = $cat['products'];
@@ -158,6 +203,7 @@ ok(['order' => [
     'id'            => $pid,
     'trackToken'    => $token,
     'status'        => 'confirmed',
+    'cancelSecondsLeft' => CANCEL_WINDOW,
     'subtotal'      => $subtotal,
     'discount'      => $discount,
     'coupon'        => $couponCode,

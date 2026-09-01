@@ -392,11 +392,14 @@ function claim_guest_orders(PDO $db, int $userId, string $canonPhone): void {
 function user_public(array $row): array {
     $phone = (string)$row['phone'];
     return [
-        'id'     => $row['public_id'],
-        'name'   => $row['full_name'] ?? '',
-        'phone'  => phone_display($phone),          // "+91 98765 43210" — for display
-        'mobile' => strlen($phone) >= 12 ? substr($phone, -10) : $phone,  // "9876543210" — for forms
-        'email'  => $row['email'] ?? '',
+        'id'      => $row['public_id'],
+        'name'    => $row['full_name'] ?? '',
+        'phone'   => phone_display($phone),          // "+91 98765 43210" — for display
+        'mobile'  => strlen($phone) >= 12 ? substr($phone, -10) : $phone,  // "9876543210" — for forms
+        'email'   => $row['email'] ?? '',
+        // Staff flag so the storefront can route admins to the panel instead of
+        // treating them as a shopping customer. The real check is always server-side.
+        'isAdmin' => (($row['role'] ?? 'customer') === 'admin'),
     ];
 }
 

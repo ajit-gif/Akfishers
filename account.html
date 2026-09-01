@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=9">
+  <link rel="stylesheet" href="styles/shared.css?v=10">
 </head>
 <body>
 
@@ -23,8 +23,8 @@
 
   <footer class="site-footer"></footer>
 
-  <script src="scripts/products.js?v=9"></script>
-  <script src="scripts/app.js?v=9"></script>
+  <script src="scripts/products.js?v=10"></script>
+  <script src="scripts/app.js?v=10"></script>
   <script>
     (function () {
       "use strict";
@@ -413,6 +413,43 @@
         });
 
         bindTracking();
+        bindOrderCancel();
+      }
+
+      var _cancelTimers = [];
+      function bindOrderCancel() {
+        _cancelTimers.forEach(clearInterval); _cancelTimers = [];
+        document.querySelectorAll("[data-cancel-order]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            if (busy) return;
+            var id = b.getAttribute("data-cancel-order");
+            if (!confirm("Cancel order #" + id + "? This can't be undone.")) return;
+            setBusy(b, true, "Cancelling…");
+            api("orders.php", { op: "cancel", id: id }).then(function (res) {
+              busy = false;
+              if (res.ok) {
+                AKF_TOAST("Order #" + id + " cancelled.", "info");
+                loadDashboard().then(function () { renderDashboard("orders"); });
+              } else {
+                setBusy(b, false);
+                AKF_TOAST(res.body.message || "Could not cancel the order.", "error");
+              }
+            });
+          });
+        });
+        // live countdown — refresh the orders panel when a window elapses
+        document.querySelectorAll("[data-cancel-timer]").forEach(function (el) {
+          var id = el.getAttribute("data-cancel-timer");
+          var o = (DASH.orders || []).filter(function (x) { return x.id === id; })[0];
+          if (!o) return;
+          var endAt = Date.now() + (o.cancelSecondsLeft || 0) * 1000;
+          var tick = setInterval(function () {
+            var left = Math.round((endAt - Date.now()) / 1000);
+            if (left <= 0) { clearInterval(tick); if (document.getElementById("panel-orders")) renderDashboard("orders"); return; }
+            el.textContent = left >= 60 ? Math.ceil(left / 60) + " min" : left + " sec";
+          }, 1000);
+          _cancelTimers.push(tick);
+        });
       }
 
       function bindTracking() {
@@ -507,7 +544,8 @@
         }
         return '<h2>Order History</h2><p class="ap-sub">' + orders.length + ' order(s).</p>' +
           orders.map(function (o) {
-            return '<div class="order-card">' +
+            var canCancel = (o.cancelSecondsLeft || 0) > 0;
+            return '<div class="order-card" data-order="' + esc(o.id) + '">' +
               '<div class="oc-head">' +
                 '<span><span class="oc-id">#' + esc(o.id) + '</span><br><span class="oc-date">' + esc(o.date || "") + ' · ' + esc(o.slot || "") + '</span></span>' +
                 '<span class="oc-status ' + statusClass(o.status) + '">' + esc((o.status || "confirmed").charAt(0).toUpperCase() + (o.status || "confirmed").slice(1)) + '</span>' +
@@ -516,6 +554,14 @@
                 (o.items || []).map(function (i) { var im = itemImg(i); return im ? '<img src="' + esc(im) + '" alt="' + esc(i.name) + '" title="' + esc(i.name) + '">' : ''; }).join("") +
               '</div>' +
               '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + esc(o.payment || "") + '</div>' +
+              (canCancel
+                ? '<div class="oc-cancel-row" style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+                    '<button class="btn btn--ghost btn--sm" data-cancel-order="' + esc(o.id) + '">Cancel order</button>' +
+                    '<span class="text-muted" style="font-size:12.5px">Free cancellation for <b data-cancel-timer="' + esc(o.id) + '">' + Math.ceil(o.cancelSecondsLeft / 60) + ' min</b></span>' +
+                  '</div>'
+                : (o.status === "confirmed"
+                    ? '<div class="text-muted" style="font-size:12.5px;margin-top:10px">To cancel this order, call us on +91 81081 06522.</div>'
+                    : '')) +
             '</div>';
           }).join("");
       }
@@ -548,11 +594,34 @@
           '</div>';
       }
 
+      function renderStaffNotice() {
+        root.innerHTML =
+          '<section class="section" style="padding-top:40px"><div class="container">' +
+            '<div class="breadcrumbs"><a href="/">Home</a><span class="sep">›</span><span>My Account</span></div>' +
+            '<div class="auth-card" style="max-width:460px;margin:20px auto;text-align:center">' +
+              '<span class="as-avatar" style="margin:0 auto 14px">' + esc(user.name ? user.name.charAt(0).toUpperCase() : "A") + '</span>' +
+              '<h2 style="margin-bottom:8px">You\'re signed in as staff</h2>' +
+              '<p class="ap-sub">This account (<b>' + esc(user.name || user.phone) + '</b>) is an administrator, not a shopping account. ' +
+                'Use the admin panel to manage orders, customers and delivery.</p>' +
+              '<a class="btn btn--primary btn--block" href="/admin">Open Admin Panel</a>' +
+              '<a class="btn btn--ghost btn--block mt-8" href="#" id="staffLogout">Sign out</a>' +
+              '<p class="text-muted" style="font-size:12.5px;margin-top:14px">To place an order as a customer, sign out and use a personal account.</p>' +
+            '</div>' +
+          '</div></section>';
+        var lo = document.getElementById("staffLogout");
+        if (lo) lo.addEventListener("click", function (e) {
+          e.preventDefault();
+          AKF_USER.logout().then(function () { window.location.href = "/account"; });
+        });
+      }
+
       /* ---------- Init: ask the server who we are, then render ---------- */
       var hash = window.location.hash.replace("#", "");
       AKF_USER.refresh().then(function (u) {
         user = u;
-        if (user) {
+        if (user && user.isAdmin) {
+          renderStaffNotice();
+        } else if (user) {
           var startPanel = ["profile", "addresses", "orders", "tracking"].indexOf(hash) > -1 ? hash : "profile";
           renderDashboard(startPanel);
           loadDashboard().then(function () { renderDashboard(startPanel); });
