@@ -70,5 +70,6 @@ if (password_needs_rehash($u['password_hash'], PASSWORD_DEFAULT)) {
 
 record_attempt($db, 'login', $u['phone'], true);
 issue_session($db, (int)$u['id']);
+claim_guest_orders($db, (int)$u['id'], (string)$u['phone']);
 
 ok(['user' => user_public($u)]);

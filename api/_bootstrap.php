@@ -132,20 +132,47 @@ function body_json(): array {
     return $data;
 }
 
+function ip_in_cidr(string $ip, string $cidr): bool {
+    if (strpos($cidr, '/') === false) return $ip === $cidr;
+    [$net, $bits] = explode('/', $cidr, 2);
+    $bits = (int)$bits;
+    $ipb = @inet_pton($ip); $netb = @inet_pton($net);
+    if ($ipb === false || $netb === false || strlen($ipb) !== strlen($netb)) return false;
+    $bytes = intdiv($bits, 8); $rem = $bits % 8;
+    if ($bytes && strncmp($ipb, $netb, $bytes) !== 0) return false;
+    if ($rem) {
+        $mask = chr(0xff << (8 - $rem) & 0xff);
+        if ((ord($ipb[$bytes]) & ord($mask)) !== (ord($netb[$bytes]) & ord($mask))) return false;
+    }
+    return true;
+}
+
 function client_ip(): string {
+    global $CFG;
     $remote = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-    // X-Forwarded-For can be spoofed by the client, so only trust it when the
-    // direct peer (REMOTE_ADDR) is a private/reserved address — i.e. we really
-    // are behind a local reverse proxy / CDN (Hostinger LiteSpeed).
-    $publicRemote = filter_var(
-        $remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-    );
-    if (!$publicRemote) {
-        foreach (explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '')) as $part) {
-            $ip = trim($part);
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return $ip;
+
+    // X-Forwarded-For is only trusted when the direct peer is a configured
+    // trusted proxy, or (fallback) a private/reserved address — i.e. we really
+    // are behind a reverse proxy / CDN (Hostinger LiteSpeed).
+    $trustedProxies = $CFG['trusted_proxies'] ?? null;
+    $trust = false;
+    if (is_array($trustedProxies)) {
+        foreach ($trustedProxies as $cidr) { if (ip_in_cidr($remote, (string)$cidr)) { $trust = true; break; } }
+    } else {
+        $publicRemote = filter_var($remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        $trust = ($publicRemote === false);
+    }
+
+    if ($trust) {
+        $fwd = explode(',', (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
+        for ($i = count($fwd) - 1; $i >= 0; $i--) {   // right-to-left: last untrusted hop
+            $ip = trim($fwd[$i]);
+            if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP)) continue;
+            $isProxy = false;
+            if (is_array($trustedProxies)) {
+                foreach ($trustedProxies as $cidr) { if (ip_in_cidr($ip, (string)$cidr)) { $isProxy = true; break; } }
             }
+            if (!$isProxy) return substr($ip, 0, 45);
         }
     }
     return $remote !== '' ? substr($remote, 0, 45) : '0.0.0.0';
@@ -269,7 +296,7 @@ function current_user(PDO $db): ?array {
     $hash = hash('sha256', $token);
 
     $stmt = $db->prepare(
-        'SELECT s.id AS sid, s.expires_at, u.id, u.public_id, u.phone, u.email, u.status,
+        'SELECT s.id AS sid, s.expires_at, u.id, u.public_id, u.phone, u.email, u.status, u.role,
                 COALESCE(p.full_name, "") AS full_name
            FROM sessions s
            JOIN users u          ON u.id = s.user_id
@@ -302,6 +329,63 @@ function require_user(PDO $db): array {
     $u = current_user($db);
     if (!$u) fail(401, 'unauthenticated', 'Please log in.');
     return $u;
+}
+
+function require_admin(PDO $db): array {
+    $u = current_user($db);
+    if (!$u) fail(401, 'unauthenticated', 'Please log in.');
+    if (($u['role'] ?? 'customer') !== 'admin') fail(403, 'forbidden', 'Admin access only.');
+    return $u;
+}
+
+/* Server-side product + coupon reference for order validation.
+   Regenerate api/data/catalog.json whenever scripts/products.js changes. */
+function load_catalog(): array {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    $f = __DIR__ . '/data/catalog.json';
+    $c = is_file($f) ? (json_decode((string)file_get_contents($f), true) ?: []) : [];
+    $cache = $c + ['products' => [], 'coupons' => [], 'free_delivery_min' => 999];
+    return $cache;
+}
+
+/* Delivery zone for a pincode — mirrors scripts/products.js akfFindArea() */
+function delivery_zone(string $pin): ?array {
+    if (!preg_match('/^\d{6}$/', $pin)) return null;
+    $n = (int)$pin;
+    $zones = [
+        ['id' => 'mumbai',      'name' => 'Mumbai',                          'lo' => 400001, 'hi' => 400104],
+        ['id' => 'thane',       'name' => 'Thane',                           'lo' => 400600, 'hi' => 400615],
+        ['id' => 'navi-mumbai', 'name' => 'Navi Mumbai',                     'lo' => 400700, 'hi' => 400710],
+        ['id' => 'navi-mumbai', 'name' => 'Navi Mumbai',                     'lo' => 410200, 'hi' => 410222],
+        ['id' => 'mbvv',        'name' => 'Mira-Bhayandar / Vasai-Virar',    'lo' => 401100, 'hi' => 401209],
+        ['id' => 'kdmt',        'name' => 'Kalyan / Dombivli / Ambernath',   'lo' => 421001, 'hi' => 421605],
+    ];
+    foreach ($zones as $z) {
+        if ($n >= $z['lo'] && $n <= $z['hi']) return ['id' => $z['id'], 'name' => $z['name']];
+    }
+    return null;
+}
+function zone_charge(PDO $db, string $zoneId): int {
+    try {
+        $stmt = $db->prepare('SELECT charge FROM delivery_zones WHERE zone_id = ?');
+        $stmt->execute([$zoneId]);
+        $c = $stmt->fetchColumn();
+        if ($c !== false) return (int)$c;
+    } catch (Throwable $e) { /* table missing? fall through */ }
+    return ['mumbai' => 49, 'thane' => 59, 'navi-mumbai' => 69, 'mbvv' => 79, 'kdmt' => 79][$zoneId] ?? 49;
+}
+
+function order_public_id(): string {
+    return 'AKF-' . str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+/* When a user logs in / signs up, attach any guest orders made with that phone */
+function claim_guest_orders(PDO $db, int $userId, string $canonPhone): void {
+    try {
+        $db->prepare('UPDATE orders SET user_id = ? WHERE user_id IS NULL AND cust_phone = ?')
+           ->execute([$userId, $canonPhone]);
+    } catch (Throwable $e) { error_log('[akf-api] claim orders: ' . $e->getMessage()); }
 }
 
 /* Public shape of a user — the ONLY user fields ever sent to the client */

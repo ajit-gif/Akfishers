@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=8">
+  <link rel="stylesheet" href="styles/shared.css?v=9">
 </head>
 <body>
 
@@ -23,8 +23,8 @@
 
   <footer class="site-footer"></footer>
 
-  <script src="scripts/products.js?v=8"></script>
-  <script src="scripts/app.js?v=8"></script>
+  <script src="scripts/products.js?v=9"></script>
+  <script src="scripts/app.js?v=9"></script>
   <script>
     (function () {
       "use strict";
@@ -32,6 +32,22 @@
       var root = document.getElementById("accountRoot");
       var user = null;              // set from the server (/api/me.php)
       var busy = false;
+      var DASH = { orders: [], addresses: [] };
+
+      function api(path, body) {
+        var opts = { credentials: "same-origin", headers: { "Accept": "application/json" } };
+        if (body !== undefined) {
+          opts.method = "POST";
+          opts.headers["Content-Type"] = "application/json";
+          opts.body = JSON.stringify(body);
+        }
+        return fetch("/api/" + path, opts).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, ok: r.ok, body: b || {} }; });
+        }).catch(function () { return { status: 0, ok: false, body: { error: "network", message: "Network error." } }; });
+      }
+      function localOrders() {
+        try { return JSON.parse(localStorage.getItem("akf_orders")) || []; } catch (e) { return []; }
+      }
 
       /* Any leftover data from the old client-only "login" — used only to
          pre-fill the sign-up form once, then discarded. */
@@ -250,12 +266,21 @@
       }
 
       /* ================= DASHBOARD VIEW ================= */
+      function loadDashboard() {
+        return Promise.all([api("orders.php"), api("addresses.php")]).then(function (r) {
+          var srv = (r[0].ok && Array.isArray(r[0].body.orders)) ? r[0].body.orders : [];
+          // merge in any device-local (guest) orders the server doesn't know about
+          var seen = {}; srv.forEach(function (o) { seen[o.id] = true; });
+          var merged = srv.concat(localOrders().filter(function (o) { return o && o.id && !seen[o.id]; }));
+          DASH.orders = merged;
+          DASH.addresses = (r[1].ok && Array.isArray(r[1].body.addresses)) ? r[1].body.addresses : [];
+        });
+      }
+
       function renderDashboard(panel) {
         panel = panel || "profile";
-        var orders = [];
-        try { orders = JSON.parse(localStorage.getItem("akf_orders")) || []; } catch (err) {}
-        var addresses = [];
-        try { addresses = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (err) {}
+        var orders = DASH.orders;
+        var addresses = DASH.addresses;
 
         var navItems = [
           { id: "profile", label: "My Profile", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
@@ -345,29 +370,80 @@
         var addAddr = document.getElementById("addAddress");
         if (addAddr) {
           addAddr.addEventListener("click", function () {
+            if (busy) return;
+            ["adFlat", "adBld", "adArea", "adPin"].forEach(function (id) { fieldError(id, ""); });
             var flat = document.getElementById("adFlat").value.trim();
             var bld = document.getElementById("adBld").value.trim();
             var area = document.getElementById("adArea").value.trim();
             var pin = document.getElementById("adPin").value.trim();
-            if (!flat || !bld || !area || !/^\d{6}$/.test(pin)) { AKF_TOAST("Fill all address fields correctly", "error"); return; }
-            var list = [];
-            try { list = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (e2) {}
-            list.push({ flat: flat, building: bld, area: area, pin: pin, label: "Home" });
-            localStorage.setItem("akf_addresses", JSON.stringify(list));
-            AKF_TOAST("Address saved", "success");
-            renderDashboard("addresses");
+            var bad = false;
+            if (!flat) { fieldError("adFlat", "Required."); bad = true; }
+            if (!bld) { fieldError("adBld", "Required."); bad = true; }
+            if (!area) { fieldError("adArea", "Required."); bad = true; }
+            if (!/^\d{6}$/.test(pin)) { fieldError("adPin", "Enter a valid 6-digit pincode."); bad = true; }
+            if (bad) return;
+
+            setBusy(addAddr, true, "Saving…");
+            api("addresses.php", { op: "add", flat: flat, building: bld, area: area, pincode: pin }).then(function (res) {
+              setBusy(addAddr, false);
+              if (res.ok) {
+                DASH.addresses = res.body.addresses || [];
+                AKF_TOAST("Address saved", "success");
+                renderDashboard("addresses");
+              } else if (res.status === 401) { window.location.href = "/account"; }
+              else if (!applyServerFieldErrors(res.body.fields, { flat: "adFlat", building: "adBld", area: "adArea", pincode: "adPin" })) {
+                AKF_TOAST(res.body.message || "Could not save the address.", "error");
+              }
+            });
           });
         }
 
         document.querySelectorAll("[data-del-addr]").forEach(function (b) {
           b.addEventListener("click", function () {
-            var idx = parseInt(b.getAttribute("data-del-addr"), 10);
-            var list = [];
-            try { list = JSON.parse(localStorage.getItem("akf_addresses")) || []; } catch (e2) {}
-            list.splice(idx, 1);
-            localStorage.setItem("akf_addresses", JSON.stringify(list));
-            AKF_TOAST("Address removed", "info");
-            renderDashboard("addresses");
+            if (busy) return;
+            var id = parseInt(b.getAttribute("data-del-addr"), 10);
+            setBusy(b, true);
+            api("addresses.php", { op: "delete", id: id }).then(function (res) {
+              busy = false;
+              if (res.ok) { DASH.addresses = res.body.addresses || []; AKF_TOAST("Address removed", "info"); renderDashboard("addresses"); }
+              else if (res.status === 401) { window.location.href = "/account"; }
+              else AKF_TOAST(res.body.message || "Could not remove the address.", "error");
+            });
+          });
+        });
+
+        bindTracking();
+      }
+
+      function bindTracking() {
+        var tb = document.getElementById("trackBtn");
+        if (!tb) return;
+        tb.addEventListener("click", function () {
+          if (busy) return;
+          var id = document.getElementById("trkId").value.trim().toUpperCase();
+          var ph = document.getElementById("trkPhone").value.trim();
+          fieldError("trkId", ""); fieldError("trkPhone", "");
+          if (!/^AKF-\d{6}$/.test(id)) { fieldError("trkId", "Order number looks like AKF-123456."); return; }
+          if (!/^[6-9]\d{9}$/.test(ph)) { fieldError("trkPhone", "Enter the 10-digit mobile on the order."); return; }
+          setBusy(tb, true, "Checking…");
+          api("track.php?id=" + encodeURIComponent(id) + "&phone=" + encodeURIComponent(ph)).then(function (res) {
+            setBusy(tb, false);
+            var box = document.getElementById("trkResult");
+            if (res.ok && res.body.order) {
+              var o = res.body.order;
+              var steps = ["Order Confirmed", "Being Cleaned & Packed", "Out For Delivery", "Delivered"];
+              box.innerHTML = '<div class="order-card" style="margin-top:14px"><div class="oc-head">' +
+                '<span class="oc-id">#' + esc(o.id) + '</span>' +
+                '<span class="oc-status ' + esc(o.status) + '">' + esc(o.status.charAt(0).toUpperCase() + o.status.slice(1)) + '</span></div>' +
+                '<div class="oc-date">Placed ' + esc(o.placedOn) + ' · delivery ' + esc(o.deliveryDate) + ' (' + esc(o.slot) + ')</div>' +
+                '<div class="track-steps mt-16">' + steps.map(function (s, i) {
+                  return '<div class="track-step ' + (i < o.step ? "done" : i === o.step ? "current" : "") + '">' +
+                    '<div class="ts-dot">' + (i < o.step ? "✓" : i + 1) + '</div><span>' + s + '</span></div>';
+                }).join("") + '</div>' +
+                '<div class="oc-total mt-16">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + esc(o.payment) + '</div></div>';
+            } else {
+              box.innerHTML = '<p class="text-muted" style="margin-top:12px">' + esc(res.body.message || "No matching order found.") + '</p>';
+            }
           });
         });
       }
@@ -386,26 +462,35 @@
           '</div>';
       }
 
+      function itemImg(it) {
+        if (it.img) return it.img;
+        var p = typeof akfGetProduct === "function" ? akfGetProduct(it.id) : null;
+        return p ? p.img : "";
+      }
+      function statusClass(s) {
+        return ["delivered", "cancelled", "out", "packed"].indexOf(s) > -1 ? s : "confirmed";
+      }
+
       function panelAddresses(addresses) {
-        var cards = addresses.length ? addresses.map(function (a, i) {
-          return '<div class="addr-card" style="margin-bottom:14px">' +
-            '<span class="ac-tag">' + esc(a.label) + '</span>' +
+        var cards = addresses.length ? addresses.map(function (a) {
+          return '<div class="addr-card' + (a.is_default ? " default" : "") + '" style="margin-bottom:14px">' +
+            '<span class="ac-tag">' + esc(a.label) + (a.is_default ? " · Default" : "") + '</span>' +
             '<b>' + esc(a.flat) + '</b>' +
-            '<p>' + esc(a.building) + ', ' + esc(a.area) + ', Mumbai, Maharashtra ' + esc(a.pin) + '</p>' +
-            '<div class="ac-actions"><button data-del-addr="' + i + '">Remove</button></div>' +
+            '<p>' + esc(a.building) + ', ' + esc(a.area) + ', ' + esc(a.city) + ', ' + esc(a.state) + ' ' + esc(a.pincode) + '</p>' +
+            '<div class="ac-actions"><button data-del-addr="' + a.id + '">Remove</button></div>' +
           '</div>';
         }).join("") : '<p class="text-muted">No saved addresses yet.</p>';
 
         return '<h2>Saved Addresses</h2>' +
-          '<p class="ap-sub">Your delivery addresses for faster checkout.</p>' +
+          '<p class="ap-sub">Your delivery addresses, synced to your account for faster checkout on any device.</p>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">' +
             '<div>' + cards + '</div>' +
             '<div class="checkout-card">' +
               '<h3 style="font-size:16px;margin-bottom:14px">Add New Address</h3>' +
-              '<div class="field"><label for="adFlat">House / Flat</label><input id="adFlat" placeholder="e.g. 402"></div>' +
-              '<div class="field"><label for="adBld">Building / Society</label><input id="adBld" placeholder="Building name"></div>' +
-              '<div class="field"><label for="adArea">Area / Locality</label><input id="adArea" placeholder="e.g. Bandra West"></div>' +
-              '<div class="field"><label for="adPin">Pincode</label><input id="adPin" inputmode="numeric" maxlength="6" placeholder="400050"></div>' +
+              field("adFlat", "House / Flat", { type: "text", placeholder: "e.g. 402" }) +
+              field("adBld", "Building / Society", { type: "text", placeholder: "Building name" }) +
+              field("adArea", "Area / Locality", { type: "text", placeholder: "e.g. Bandra West" }) +
+              field("adPin", "Pincode", { type: "text", inputmode: "numeric", maxlength: "6", placeholder: "400050" }) +
               '<button class="btn btn--primary btn--block" id="addAddress">Save Address</button>' +
             '</div>' +
           '</div>';
@@ -420,51 +505,46 @@
               '<a class="btn btn--primary" href="/shop">Shop Now</a>' +
             '</div>';
         }
-        return '<h2>Order History</h2><p class="ap-sub">' + orders.length + ' order(s) placed.</p>' +
+        return '<h2>Order History</h2><p class="ap-sub">' + orders.length + ' order(s).</p>' +
           orders.map(function (o) {
-            var statusClass = o.status === "delivered" ? "delivered" : o.status === "cancelled" ? "cancelled" : o.status === "out" ? "out" : o.status === "packed" ? "packed" : "confirmed";
             return '<div class="order-card">' +
               '<div class="oc-head">' +
-                '<span><span class="oc-id">#' + esc(o.id) + '</span><br><span class="oc-date">' + esc(o.date) + ' · ' + esc(o.slot) + '</span></span>' +
-                '<span class="oc-status ' + statusClass + '">' + esc(o.status.charAt(0).toUpperCase() + o.status.slice(1)) + '</span>' +
+                '<span><span class="oc-id">#' + esc(o.id) + '</span><br><span class="oc-date">' + esc(o.date || "") + ' · ' + esc(o.slot || "") + '</span></span>' +
+                '<span class="oc-status ' + statusClass(o.status) + '">' + esc((o.status || "confirmed").charAt(0).toUpperCase() + (o.status || "confirmed").slice(1)) + '</span>' +
               '</div>' +
               '<div class="oc-items">' +
-                o.items.map(function (i) { return '<img src="' + esc(i.img) + '" alt="' + esc(i.name) + '" title="' + esc(i.name) + '">'; }).join("") +
+                (o.items || []).map(function (i) { var im = itemImg(i); return im ? '<img src="' + esc(im) + '" alt="' + esc(i.name) + '" title="' + esc(i.name) + '">' : ''; }).join("") +
               '</div>' +
-              '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + esc(o.payment) + '</div>' +
+              '<div class="oc-total">Total: <b>' + akfFormatINR(o.total) + '</b> · ' + esc(o.payment || "") + '</div>' +
             '</div>';
           }).join("");
       }
 
       function panelTracking(orders) {
-        var active = orders.find(function (o) { return o.status !== "delivered" && o.status !== "cancelled"; }) || orders[0];
-        if (!active) {
-          return '<h2>Order Tracking</h2><p class="ap-sub">Track your live orders here.</p>' +
-            '<div class="empty-state" style="border:1px solid var(--line-soft);border-radius:var(--r-lg)">' +
-              '<div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>' +
-              '<h3>No active orders</h3><p>Place an order to track it live.</p>' +
-              '<a class="btn btn--primary" href="/shop">Shop Now</a>' +
+        var active = orders.filter(function (o) { return o.status !== "delivered" && o.status !== "cancelled"; })[0] || orders[0];
+        var live = "";
+        if (active) {
+          var steps = ["Order Confirmed", "Being Cleaned & Packed", "Out For Delivery", "Delivered"];
+          var idx = active.status === "packed" ? 1 : active.status === "out" ? 2 : active.status === "delivered" ? 3 : 0;
+          live = '<h3 style="margin-top:6px">Latest order · #' + esc(active.id) + '</h3>' +
+            '<div class="checkout-card">' +
+              '<div class="track-steps">' + steps.map(function (s, i) {
+                return '<div class="track-step ' + (i < idx ? "done" : i === idx ? "current" : "") + '">' +
+                  '<div class="ts-dot">' + (i < idx ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>' : i + 1) + '</div>' +
+                  '<span>' + s + '</span></div>';
+              }).join("") + '</div>' +
+              (active.address ? '<div class="cs-note mt-16">📦 Delivering to: ' + esc(active.address) + '</div>' : '') +
             '</div>';
         }
-        var steps = ["Order Confirmed", "Being Cleaned & Packed", "Out For Delivery", "Delivered"];
-        var currentIdx = active.status === "confirmed" ? 0 : active.status === "packed" ? 1 : active.status === "out" ? 2 : 3;
         return '<h2>Order Tracking</h2>' +
-          '<p class="ap-sub">Order <b>#' + esc(active.id) + '</b> · ' + esc(active.deliveryDate) + ' · ' + esc(active.slot) + '</p>' +
-          '<div class="checkout-card">' +
-            '<div class="track-steps">' +
-              steps.map(function (s, i) {
-                return '<div class="track-step ' + (i < currentIdx ? "done" : i === currentIdx ? "current" : "") + '">' +
-                  '<div class="ts-dot">' + (i < currentIdx ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M20 6L9 17l-5-5"/></svg>' : i + 1) + '</div>' +
-                  '<span>' + s + '</span>' +
-                '</div>';
-              }).join("") +
-            '</div>' +
-            '<div class="cs-note mt-16">📦 Delivering to: ' + esc(active.address) + '</div>' +
-          '</div>' +
-          '<div class="order-card">' +
-            '<div class="oc-head"><span class="oc-id">#' + esc(active.id) + '</span><span class="oc-date">' + esc(active.date) + '</span></div>' +
-            '<div class="oc-items">' + active.items.map(function (i) { return '<img src="' + esc(i.img) + '" alt="">'; }).join("") + '</div>' +
-            '<div class="oc-total">Total: <b>' + akfFormatINR(active.total) + '</b> · ' + esc(active.payment) + '</div>' +
+          '<p class="ap-sub">Follow your live order, or look up any order by its number.</p>' +
+          live +
+          '<div class="checkout-card" style="max-width:520px;margin-top:16px">' +
+            '<h3 style="font-size:16px;margin-bottom:12px">Track any order</h3>' +
+            field("trkId", "Order number", { type: "text", placeholder: "AKF-123456" }) +
+            field("trkPhone", "Mobile number on the order", { type: "tel", inputmode: "numeric", maxlength: "10", placeholder: "10-digit mobile" }) +
+            '<button class="btn btn--primary" id="trackBtn">Check status</button>' +
+            '<div id="trkResult"></div>' +
           '</div>';
       }
 
@@ -473,7 +553,9 @@
       AKF_USER.refresh().then(function (u) {
         user = u;
         if (user) {
-          renderDashboard(["profile", "addresses", "orders", "tracking"].indexOf(hash) > -1 ? hash : "profile");
+          var startPanel = ["profile", "addresses", "orders", "tracking"].indexOf(hash) > -1 ? hash : "profile";
+          renderDashboard(startPanel);
+          loadDashboard().then(function () { renderDashboard(startPanel); });
         } else if (AKF_USER.backendReady === false) {
           renderAuth("login");
           alertBox("Accounts are being set up right now — please check back shortly. You can still place an order as a guest.", "err");

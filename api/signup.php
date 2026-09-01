@@ -57,6 +57,7 @@ try {
 
 record_attempt($db, 'signup', $phone, true);
 issue_session($db, $userId);
+claim_guest_orders($db, $userId, $phone);
 
 ok(['user' => user_public([
     'public_id' => $pid, 'phone' => $phone, 'email' => $email ?: '', 'full_name' => $name,

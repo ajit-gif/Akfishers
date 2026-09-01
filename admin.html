@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=8">
-  <link rel="stylesheet" href="styles/admin.css?v=8">
+  <link rel="stylesheet" href="styles/shared.css?v=9">
+  <link rel="stylesheet" href="styles/admin.css?v=9">
 </head>
 <body class="admin-body">
 
@@ -90,8 +90,8 @@
     </div>
   </div>
 
-  <script src="scripts/products.js?v=8"></script>
-  <script src="scripts/app.js?v=8"></script>
+  <script src="scripts/products.js?v=9"></script>
+  <script src="scripts/app.js?v=9"></script>
   <script>
     (function () {
       "use strict";
@@ -99,76 +99,105 @@
       var main = document.getElementById("adminMain");
       var currentView = "dashboard";
 
-      /* ---------- Basic admin gate (client-side only) ---------- */
-      var ADMIN_PASS = "akfishers-admin";
-      if (sessionStorage.getItem("akf_admin") !== "ok") {
+      /* ---------- API helper ---------- */
+      function api(path, body) {
+        var opts = { credentials: "same-origin", headers: { "Accept": "application/json" } };
+        if (body !== undefined) {
+          opts.method = "POST";
+          opts.headers["Content-Type"] = "application/json";
+          opts.body = JSON.stringify(body);
+        }
+        return fetch("/api/" + path, opts).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, ok: r.ok, body: b || {} }; });
+        }).catch(function () { return { status: 0, ok: false, body: { message: "Network error." } }; });
+      }
+
+      /* server-loaded data, refreshed per view */
+      var ADMIN = { orders: [], stats: null, zones: [] };
+
+      /* ---------- Server-side admin gate ---------- */
+      function showAdminLogin(msg) {
         document.querySelector(".admin-side").style.display = "none";
         main.innerHTML =
           '<div class="admin-topbar"><div><h1>Admin sign-in</h1>' +
-            '<div class="at-sub">Enter the admin passcode to manage the store.</div></div></div>' +
+            '<div class="at-sub">Sign in with an authorised admin account.</div></div></div>' +
           '<div class="admin-card" style="max-width:420px">' +
-            '<div class="field"><label>Passcode</label><input type="password" id="admPass" placeholder="Enter passcode" autocomplete="off"></div>' +
-            '<button class="btn btn--primary" id="admLogin">Sign in</button>' +
+            '<div id="admAlert" class="form-alert' + (msg ? ' err' : '') + '">' + (msg || "") + '</div>' +
+            '<div class="field"><label for="admId">Mobile number or email</label><input id="admId" type="text" autocomplete="username"></div>' +
+            '<div class="field"><label for="admPw">Password</label><input id="admPw" type="password" autocomplete="current-password"></div>' +
+            '<button class="btn btn--primary btn--block" id="admLogin">Sign in</button>' +
+            '<p class="text-muted" style="font-size:12.5px;margin-top:12px">Access is granted per account (role = admin). Contact the site owner if you need access.</p>' +
           '</div>';
-        var doLogin = function () {
-          if (document.getElementById("admPass").value === ADMIN_PASS) {
-            sessionStorage.setItem("akf_admin", "ok");
-            location.reload();
-          } else {
-            AKF_TOAST("Incorrect passcode", "error");
-          }
+        var go = function () {
+          var btn = document.getElementById("admLogin");
+          if (btn.disabled) return;
+          btn.disabled = true; btn.classList.add("is-busy");
+          api("login.php", { identifier: document.getElementById("admId").value.trim(), password: document.getElementById("admPw").value })
+            .then(function (res) {
+              if (!res.ok) {
+                btn.disabled = false; btn.classList.remove("is-busy");
+                var a = document.getElementById("admAlert"); a.className = "form-alert err"; a.textContent = res.body.message || "Sign in failed.";
+                return;
+              }
+              return api("admin/me.php").then(function (m) {
+                if (m.ok && m.body.admin) { location.reload(); }
+                else {
+                  btn.disabled = false; btn.classList.remove("is-busy");
+                  var a = document.getElementById("admAlert"); a.className = "form-alert err";
+                  a.textContent = "This account is not an admin.";
+                  api("logout.php", {});
+                }
+              });
+            });
         };
-        document.getElementById("admLogin").addEventListener("click", doLogin);
-        document.getElementById("admPass").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
-        return;
-      }
-
-      /* ---------- Data helpers ---------- */
-      function getOrders() { try { return JSON.parse(localStorage.getItem("akf_orders")) || []; } catch (e) { return []; } }
-      function setOrders(o) { localStorage.setItem("akf_orders", JSON.stringify(o)); }
-      function getCoupons() { try { return JSON.parse(localStorage.getItem("akf_admin_coupons")) || AKF_COUPONS.slice(); } catch (e) { return AKF_COUPONS.slice(); } }
-      function setCoupons(c) { localStorage.setItem("akf_admin_coupons", JSON.stringify(c)); }
-      function getCustomers() {
-        var seen = {};
-        getOrders().forEach(function (o) {
-          if (o.mobile && !seen[o.mobile]) seen[o.mobile] = { name: o.name, mobile: o.mobile, orders: 0, total: 0, last: o.date };
-          if (seen[o.mobile]) { seen[o.mobile].orders++; seen[o.mobile].total += o.total; }
-        });
-        return Object.keys(seen).map(function (k) { return seen[k]; });
+        document.getElementById("admLogin").addEventListener("click", go);
+        document.getElementById("admPw").addEventListener("keydown", function (e) { if (e.key === "Enter") go(); });
       }
 
       /* ---------- Icons ---------- */
       var I = window.AKF_ICONS;
 
-      /* ---------- Views ---------- */
-      function renderDashboard() {
-        var orders = getOrders();
-        var revenue = orders.reduce(function (s, o) { return s + o.total; }, 0);
-        var customers = getCustomers();
-        var recent = orders.slice(0, 6);
+      function getCoupons() { try { return JSON.parse(localStorage.getItem("akf_admin_coupons")) || AKF_COUPONS.slice(); } catch (e) { return AKF_COUPONS.slice(); } }
+      function setCoupons(c) { localStorage.setItem("akf_admin_coupons", JSON.stringify(c)); }
+      function customersFromOrders() {
+        var seen = {};
+        ADMIN.orders.forEach(function (o) {
+          var k = o.phone || o.name;
+          if (!seen[k]) seen[k] = { name: o.name, phone: o.phone, orders: 0, total: 0, last: o.placedOn, registered: o.registered };
+          seen[k].orders++; seen[k].total += (o.total || 0);
+        });
+        return Object.keys(seen).map(function (k) { return seen[k]; });
+      }
+      var CLIENT_ONLY_NOTE = '<div class="cs-note" style="background:#fdf3e0;color:#b97a12;margin-bottom:16px">⚠ Catalogue edits on this screen are a local preview only — they are not yet saved to the server. Product data still lives in <code>scripts/products.js</code>.</div>';
 
+      /* ---------- Views ---------- */
+      function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+      function renderDashboard() {
+        var s = ADMIN.stats || {};
+        var recent = ADMIN.orders.slice(0, 6);
         main.innerHTML =
           '<div class="admin-topbar">' +
-            '<div><h1>Dashboard</h1><div class="at-sub">Welcome back! Here\'s your store at a glance.</div></div>' +
+            '<div><h1>Dashboard</h1><div class="at-sub">Your store at a glance.</div></div>' +
             '<div class="at-actions"><a class="btn btn--primary btn--sm" href="/shop">View Store</a></div>' +
           '</div>' +
           '<div class="stat-grid">' +
-            '<div class="stat-card"><span class="sc-icon blue">' + I.doc + '</span><span><b>' + orders.length + '</b><span>Total Orders</span></span></div>' +
-            '<div class="stat-card"><span class="sc-icon green">' + I.wallet + '</span><span><b>' + akfFormatINR(revenue) + '</b><span>Total Revenue</span></span></div>' +
-            '<div class="stat-card"><span class="sc-icon amber">' + I.users + '</span><span><b>' + customers.length + '</b><span>Total Customers</span></span></div>' +
-            '<div class="stat-card"><span class="sc-icon red">' + I.box + '</span><span><b>' + AKF_PRODUCTS.length + '</b><span>Products Live</span><span class="sc-trend down">' + AKF_PRODUCTS.filter(function (p) { return p.stock < 10; }).length + ' low stock</span></span></div>' +
+            '<div class="stat-card"><span class="sc-icon blue">' + I.doc + '</span><span><b>' + (s.ordersTotal || 0) + '</b><span>Total Orders</span>' + (s.ordersOpen ? '<span class="sc-trend up">' + s.ordersOpen + ' open</span>' : '') + '</span></div>' +
+            '<div class="stat-card"><span class="sc-icon green">' + I.wallet + '</span><span><b>' + akfFormatINR(s.revenue || 0) + '</b><span>Revenue</span></span></div>' +
+            '<div class="stat-card"><span class="sc-icon amber">' + I.users + '</span><span><b>' + (s.customers || 0) + '</b><span>Customers</span><span class="sc-trend up">' + (s.registered || 0) + ' with accounts</span></span></div>' +
+            '<div class="stat-card"><span class="sc-icon red">' + I.box + '</span><span><b>' + AKF_PRODUCTS.length + '</b><span>Products Live</span><span class="sc-trend up">' + (s.last7 || 0) + ' orders / 7 days</span></span></div>' +
           '</div>' +
           '<div class="admin-card">' +
             '<div class="ac-head"><h3>Recent Orders</h3><a class="btn btn--ghost btn--sm" href="#" data-goto="orders">View All</a></div>' +
             (recent.length ? '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>' +
               recent.map(function (o) {
-                return '<tr><td><b>#' + o.id + '</b><br><span class="text-muted">' + o.date + '</span></td>' +
-                  '<td>' + o.name + '<br><span class="text-muted">' + o.mobile + '</span></td>' +
-                  '<td>' + o.items.length + ' item(s)</td>' +
+                return '<tr><td><b>#' + esc(o.id) + '</b><br><span class="text-muted">' + esc(o.placedOn) + '</span></td>' +
+                  '<td>' + esc(o.name) + '<br><span class="text-muted">' + esc(o.phone) + '</span></td>' +
+                  '<td>' + (o.items ? o.items.length : 0) + ' item(s)</td>' +
                   '<td><b>' + akfFormatINR(o.total) + '</b></td>' +
-                  '<td><span class="badge badge--stock">' + o.status + '</span></td></tr>';
+                  '<td><span class="badge badge--stock">' + esc(o.status) + '</span></td></tr>';
               }).join("") +
-            '</tbody></table></div>' : '<p class="text-muted">No orders yet. Orders placed on the store will appear here.</p>') +
+            '</tbody></table></div>' : '<p class="text-muted">No orders yet.</p>') +
           '</div>';
       }
 
@@ -178,6 +207,7 @@
             '<div><h1>Products</h1><div class="at-sub">' + AKF_PRODUCTS.length + ' products in catalogue</div></div>' +
             '<div class="at-actions"><button class="btn btn--primary btn--sm" id="addProduct">+ Add Product</button></div>' +
           '</div>' +
+          CLIENT_ONLY_NOTE +
           '<div class="admin-card">' +
             '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sold</th><th>Rating</th><th>Actions</th></tr></thead><tbody>' +
             AKF_PRODUCTS.map(function (p) {
@@ -247,6 +277,7 @@
             '<div><h1>Categories</h1><div class="at-sub">Manage your store categories</div></div>' +
             '<div class="at-actions"><button class="btn btn--primary btn--sm" id="addCat">+ Add Category</button></div>' +
           '</div>' +
+          CLIENT_ONLY_NOTE +
           '<div class="admin-card">' +
             '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Category</th><th>Marathi</th><th>Products</th><th>Actions</th></tr></thead><tbody>' +
             AKF_CATEGORIES.map(function (c, i) {
@@ -294,87 +325,102 @@
       }
 
       function renderOrders() {
-        var orders = getOrders();
+        var orders = ADMIN.orders;
         main.innerHTML =
           '<div class="admin-topbar">' +
-            '<div><h1>Orders</h1><div class="at-sub">' + orders.length + ' total orders</div></div>' +
+            '<div><h1>Orders</h1><div class="at-sub">' + orders.length + ' orders (most recent first)</div></div>' +
+            '<div class="at-actions"><button class="btn btn--ghost btn--sm" id="ordReload">Refresh</button></div>' +
           '</div>' +
-          (orders.length ? orders.map(function (o, idx) {
-            var statusClass = o.status === "delivered" ? "delivered" : o.status === "cancelled" ? "cancelled" : o.status === "out" ? "out" : o.status === "packed" ? "packed" : "confirmed";
+          (orders.length ? orders.map(function (o) {
+            var sc = o.status === "delivered" ? "delivered" : o.status === "cancelled" ? "cancelled" : o.status === "out" ? "out" : o.status === "packed" ? "packed" : "confirmed";
             return '<div class="admin-card">' +
               '<div class="ac-head">' +
-                '<div><h3>#' + o.id + ' <span class="text-muted" style="font-size:13px;font-weight:500">· ' + o.date + ' · ' + o.slot + '</span></h3>' +
-                '<div class="ac-sub">' + o.name + ' · ' + o.mobile + ' · ' + o.payment + '</div></div>' +
-                '<select class="status-select ' + statusClass + '" data-status="' + idx + '">' +
-                  '<option value="confirmed"' + (o.status === "confirmed" ? " selected" : "") + '>Confirmed</option>' +
-                  '<option value="packed"' + (o.status === "packed" ? " selected" : "") + '>Packed</option>' +
-                  '<option value="out"' + (o.status === "out" ? " selected" : "") + '>Out for Delivery</option>' +
-                  '<option value="delivered"' + (o.status === "delivered" ? " selected" : "") + '>Delivered</option>' +
-                  '<option value="cancelled"' + (o.status === "cancelled" ? " selected" : "") + '>Cancelled</option>' +
+                '<div><h3>#' + esc(o.id) + ' <span class="text-muted" style="font-size:13px;font-weight:500">· ' + esc(o.placedOn) + '</span>' + (o.registered ? '' : ' <span class="badge badge--stock">guest</span>') + '</h3>' +
+                '<div class="ac-sub">' + esc(o.name) + ' · ' + esc(o.phone) + (o.email ? ' · ' + esc(o.email) : '') + ' · ' + esc(o.payment) + '</div></div>' +
+                '<select class="status-select ' + sc + '" data-status="' + esc(o.id) + '">' +
+                  ['confirmed', 'packed', 'out', 'delivered', 'cancelled'].map(function (v) {
+                    var lbl = { confirmed: 'Confirmed', packed: 'Packed', out: 'Out for Delivery', delivered: 'Delivered', cancelled: 'Cancelled' }[v];
+                    return '<option value="' + v + '"' + (o.status === v ? ' selected' : '') + '>' + lbl + '</option>';
+                  }).join("") +
                 '</select>' +
               '</div>' +
               '<div class="admin-grid-2">' +
-                '<div>' +
-                  '<div class="ac-sub" style="margin-bottom:8px">Items</div>' +
-                  o.items.map(function (i) {
-                    return '<div class="area-row"><img src="' + i.img + '" style="width:40px;height:40px;border-radius:8px;object-fit:cover" alt="">' +
-                      '<span style="flex:1"><b>' + i.name + '</b><br><span class="text-muted">' + (i.weight >= 1000 ? i.weight / 1000 + "kg" : i.weight + "g") + ' · ' + i.cut + ' · Qty ' + i.qty + '</span></span>' +
+                '<div><div class="ac-sub" style="margin-bottom:8px">Items</div>' +
+                  (o.items || []).map(function (i) {
+                    return '<div class="area-row"><span style="flex:1"><b>' + esc(i.name) + '</b><br><span class="text-muted">' +
+                      (i.weight >= 1000 ? i.weight / 1000 + "kg" : i.weight + "g") + ' · ' + esc(i.cut) + ' · Qty ' + i.qty + '</span></span>' +
                       '<b>' + akfFormatINR(i.price) + '</b></div>';
                   }).join("") +
+                  (o.discount ? '<div class="area-row"><span style="flex:1" class="text-muted">Coupon ' + esc(o.coupon || '') + '</span><b class="text-success">− ' + akfFormatINR(o.discount) + '</b></div>' : '') +
+                  '<div class="area-row"><span style="flex:1" class="text-muted">Delivery</span><b>' + (o.deliveryCharge ? akfFormatINR(o.deliveryCharge) : 'FREE') + '</b></div>' +
                   '<div class="area-row"><span style="flex:1"></span><b>Total: ' + akfFormatINR(o.total) + '</b></div>' +
                 '</div>' +
-                '<div>' +
-                  '<div class="ac-sub" style="margin-bottom:8px">Delivery Address</div>' +
-                  '<div class="cs-note">📍 ' + o.address + '<br>📅 ' + o.deliveryDate + ' · ' + o.slot + '</div>' +
-                '</div>' +
+                '<div><div class="ac-sub" style="margin-bottom:8px">Delivery</div>' +
+                  '<div class="cs-note">📍 ' + esc(o.address) + '<br>📅 ' + esc(o.deliveryDate) + ' · ' + esc(o.slot) + '</div></div>' +
               '</div>' +
             '</div>';
-          }).join("") : '<div class="admin-card"><p class="text-muted">No orders yet. Orders placed on the store will appear here.</p></div>');
+          }).join("") : '<div class="admin-card"><p class="text-muted">No orders yet.</p></div>');
+
+        var rl = document.getElementById("ordReload");
+        if (rl) rl.addEventListener("click", function () { loadAdminData().then(function () { renderOrders(); }); });
 
         document.querySelectorAll("[data-status]").forEach(function (sel) {
           sel.addEventListener("change", function () {
-            var orders = getOrders();
-            var idx = parseInt(sel.getAttribute("data-status"), 10);
-            orders[idx].status = sel.value;
-            setOrders(orders);
-            AKF_TOAST("Order #" + orders[idx].id + " marked as " + sel.value, "success");
-            renderOrders();
+            var id = sel.getAttribute("data-status");
+            var newStatus = sel.value;
+            sel.disabled = true;
+            api("admin/orders.php", { op: "status", id: id, status: newStatus }).then(function (res) {
+              sel.disabled = false;
+              if (res.ok) {
+                var o = ADMIN.orders.find(function (x) { return x.id === id; });
+                if (o) o.status = newStatus;
+                sel.className = "status-select " + newStatus;
+                AKF_TOAST("Order #" + id + " → " + newStatus, "success");
+              } else if (res.status === 401 || res.status === 403) {
+                location.reload();
+              } else {
+                AKF_TOAST(res.body.message || "Could not update status.", "error");
+                loadAdminData().then(function () { renderOrders(); });
+              }
+            });
           });
         });
       }
 
       function renderCustomers() {
-        var customers = getCustomers();
+        var customers = customersFromOrders().sort(function (a, b) { return b.total - a.total; });
         main.innerHTML =
           '<div class="admin-topbar">' +
-            '<div><h1>Customers</h1><div class="at-sub">' + customers.length + ' customers</div></div>' +
+            '<div><h1>Customers</h1><div class="at-sub">' + customers.length + ' customers (from orders)</div></div>' +
           '</div>' +
           '<div class="admin-card">' +
-            '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Customer</th><th>Mobile</th><th>Orders</th><th>Total Spent</th><th>Last Order</th></tr></thead><tbody>' +
+            '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Customer</th><th>Mobile</th><th>Account</th><th>Orders</th><th>Total</th><th>Last Order</th></tr></thead><tbody>' +
             (customers.length ? customers.map(function (c) {
-              return '<tr><td><div class="t-prod"><span style="width:40px;height:40px;border-radius:50%;background:var(--ocean-100);color:var(--ocean-700);display:grid;place-items:center;font-weight:700">' + c.name.charAt(0) + '</span><span><b>' + c.name + '</b></span></div></td>' +
-                '<td>' + c.mobile + '</td>' +
+              return '<tr><td><div class="t-prod"><span style="width:40px;height:40px;border-radius:50%;background:var(--ocean-100);color:var(--ocean-700);display:grid;place-items:center;font-weight:700">' + esc((c.name || "?").charAt(0)) + '</span><span><b>' + esc(c.name) + '</b></span></div></td>' +
+                '<td>' + esc(c.phone) + '</td>' +
+                '<td>' + (c.registered ? '<span class="badge badge--new">Registered</span>' : '<span class="text-muted">Guest</span>') + '</td>' +
                 '<td>' + c.orders + '</td>' +
                 '<td><b>' + akfFormatINR(c.total) + '</b></td>' +
-                '<td>' + c.last + '</td></tr>';
-            }).join("") : '<tr><td colspan="5" class="text-muted">No customers yet</td></tr>') +
+                '<td>' + esc(c.last) + '</td></tr>';
+            }).join("") : '<tr><td colspan="6" class="text-muted">No customers yet</td></tr>') +
             '</tbody></table></div>' +
           '</div>';
       }
 
       function renderDelivery() {
+        var zones = ADMIN.zones;
         main.innerHTML =
           '<div class="admin-topbar">' +
-            '<div><h1>Delivery Management</h1><div class="at-sub">' + AKF_DELIVERY_ZONES.length + ' delivery zones · Free delivery above ₹999</div></div>' +
+            '<div><h1>Delivery Management</h1><div class="at-sub">' + zones.length + ' delivery zones · Free delivery above ₹999</div></div>' +
           '</div>' +
           '<div class="admin-grid-2">' +
             '<div class="admin-card">' +
-              '<div class="ac-head"><h3>Delivery Zones &amp; Charges</h3></div>' +
+              '<div class="ac-head"><h3>Delivery Zones &amp; Charges</h3><span class="text-muted" style="font-size:12px">saved to server</span></div>' +
               '<div style="max-height:520px;overflow-y:auto">' +
-                AKF_DELIVERY_ZONES.map(function (z, i) {
+                zones.map(function (z) {
                   return '<div class="area-row">' +
-                    '<span class="ar-area" style="flex:1"><b>' + z.name + '</b><br><span class="text-muted" style="font-size:12px">' + z.note + '</span></span>' +
-                    '<input type="number" value="' + z.charge + '" data-charge="' + i + '" min="0" style="width:80px">' +
+                    '<span class="ar-area" style="flex:1"><b>' + esc(z.name) + '</b></span>' +
+                    '<input type="number" value="' + z.charge + '" data-charge="' + esc(z.id) + '" min="0" max="999" style="width:80px">' +
                     '<span class="text-muted" style="font-size:12px">₹</span>' +
                   '</div>';
                 }).join("") +
@@ -404,9 +450,16 @@
 
         document.querySelectorAll("[data-charge]").forEach(function (inp) {
           inp.addEventListener("change", function () {
-            var i = parseInt(inp.getAttribute("data-charge"), 10);
-            AKF_DELIVERY_ZONES[i].charge = parseInt(inp.value, 10) || 0;
-            AKF_TOAST("Charge updated for " + AKF_DELIVERY_ZONES[i].name, "success");
+            var zid = inp.getAttribute("data-charge");
+            var charge = parseInt(inp.value, 10);
+            if (isNaN(charge) || charge < 0 || charge > 999) { AKF_TOAST("Charge must be 0–999", "error"); return; }
+            inp.disabled = true;
+            api("admin/zones.php", { op: "charge", id: zid, charge: charge }).then(function (res) {
+              inp.disabled = false;
+              if (res.ok) { ADMIN.zones = res.body.zones || ADMIN.zones; AKF_TOAST("Zone charge saved", "success"); }
+              else if (res.status === 401 || res.status === 403) { location.reload(); }
+              else AKF_TOAST(res.body.message || "Could not save.", "error");
+            });
           });
         });
 
@@ -427,6 +480,7 @@
             '<div><h1>Coupons</h1><div class="at-sub">' + coupons.length + ' active coupons</div></div>' +
             '<div class="at-actions"><button class="btn btn--primary btn--sm" id="addCoupon">+ Create Coupon</button></div>' +
           '</div>' +
+          CLIENT_ONLY_NOTE +
           '<div class="admin-grid-3">' +
             coupons.map(function (c, i) {
               return '<div class="coupon-card">' +
@@ -460,8 +514,16 @@
       if (logoutLink) {
         logoutLink.addEventListener("click", function (e) {
           e.preventDefault();
-          sessionStorage.removeItem("akf_admin");
-          location.reload();
+          api("logout.php", {}).then(function () { location.href = "/"; });
+        });
+      }
+
+      function loadAdminData() {
+        return Promise.all([api("admin/stats.php"), api("admin/orders.php"), api("admin/zones.php")]).then(function (r) {
+          if (r[0].ok) ADMIN.stats = r[0].body.stats;
+          if (r[1].ok) ADMIN.orders = r[1].body.orders || [];
+          if (r[2].ok) ADMIN.zones = r[2].body.zones || [];
+          if ([r[0], r[1], r[2]].some(function (x) { return x.status === 401 || x.status === 403; })) location.reload();
         });
       }
 
@@ -477,13 +539,22 @@
       });
 
       function switchView(v) {
-        if (v === "dashboard") renderDashboard();
-        else if (v === "products") renderProducts();
-        else if (v === "categories") renderCategories();
-        else if (v === "orders") renderOrders();
-        else if (v === "customers") renderCustomers();
-        else if (v === "delivery") renderDelivery();
-        else if (v === "coupons") renderCoupons();
+        var serverViews = { dashboard: 1, orders: 1, customers: 1, delivery: 1 };
+        var draw = function () {
+          if (v === "dashboard") renderDashboard();
+          else if (v === "products") renderProducts();
+          else if (v === "categories") renderCategories();
+          else if (v === "orders") renderOrders();
+          else if (v === "customers") renderCustomers();
+          else if (v === "delivery") renderDelivery();
+          else if (v === "coupons") renderCoupons();
+        };
+        if (serverViews[v]) {
+          main.innerHTML = '<div class="admin-topbar"><div><h1>Loading…</h1></div></div>';
+          loadAdminData().then(draw);
+        } else {
+          draw();
+        }
       }
 
       /* ---------- Modal events ---------- */
@@ -572,7 +643,18 @@
         }
       });
 
-      renderDashboard();
+      /* ---------- Gate: require a server-side admin session ---------- */
+      api("admin/me.php").then(function (res) {
+        if (res.ok && res.body.admin) {
+          document.querySelector(".admin-side").style.display = "";
+          switchView("dashboard");
+        } else if (res.status === 503) {
+          document.querySelector(".admin-side").style.display = "none";
+          main.innerHTML = '<div class="admin-topbar"><div><h1>Admin</h1><div class="at-sub">The backend is not configured yet — run the database setup, then sign in.</div></div></div>';
+        } else {
+          showAdminLogin();
+        }
+      });
     })();
   </script>
 </body>
