@@ -10,10 +10,9 @@
   background: var(--navy); color: #b9cddb; padding: 24px 0;
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
 }
-.admin-side .as-logo { display: flex; align-items: center; gap: 10px; padding: 0 22px 22px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 18px; }
-.admin-side .as-logo .logo-mark { width: 38px; height: 38px; }
-.admin-side .as-logo b { color: #fff; font-family: var(--font-display); font-size: 17px; }
-.admin-side .as-logo span { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7fa3b8; }
+.admin-side .as-logo { padding: 0 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 18px; }
+.admin-side .as-logo-img { display: block; width: 100%; max-width: 172px; background: #fff; padding: 10px 14px; border-radius: 12px; }
+.admin-side .as-logo-tag { display: block; margin-top: 10px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #7fa3b8; }
 .admin-side nav a {
   display: flex; align-items: center; gap: 12px; padding: 12px 22px;
   font-size: 14px; font-weight: 600; color: #9db8c9;

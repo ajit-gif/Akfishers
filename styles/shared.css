@@ -227,23 +227,11 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 
 .header-main { display: flex; align-items: center; gap: 18px; height: var(--header-h); }
 
-.logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.logo-mark {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: linear-gradient(150deg, var(--ocean-700), var(--ocean-500) 55%, var(--aqua));
-  display: grid; place-items: center; color: #fff;
-  box-shadow: 0 6px 16px rgba(18, 127, 176, 0.35);
-  position: relative; overflow: hidden;
-}
-.logo-mark svg { width: 26px; height: 26px; }
-.logo-mark::after {
-  content: ""; position: absolute; inset: 0;
-  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 55%);
-}
-.logo-text { line-height: 1.1; }
-.logo-text .name { font-family: var(--font-display); font-weight: 700; font-size: 21px; color: var(--navy); letter-spacing: 0.01em; }
-.logo-text .name span { color: var(--ocean-500); }
-.logo-text .tag { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.logo { display: flex; align-items: center; flex-shrink: 0; }
+
+/* Brand logo image */
+.logo-img { height: 58px; width: auto; display: block; }
+.logo--footer .logo-img { height: 66px; background: #fff; padding: 10px 18px; border-radius: 14px; }
 
 /* Location selector */
 .loc-selector { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1.5px solid var(--line); border-radius: var(--r-md); cursor: pointer; transition: border-color 0.18s ease; background: #fff; }
@@ -347,8 +335,6 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 /* ---------- Footer ---------- */
 .site-footer { background: var(--navy); color: #b9cddb; }
 .footer-top { padding: 60px 0 40px; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap: 40px; }
-.footer-brand .logo-text .name { color: #fff; }
-.footer-brand .logo-text .tag { color: #7fa3b8; }
 .footer-brand p { margin: 16px 0 20px; font-size: 14px; line-height: 1.7; color: #9db8c9; }
 .footer-social { display: flex; gap: 10px; }
 .footer-social a {
@@ -881,9 +867,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   .product-card .pc-actions .btn { font-size: 12.5px; padding: 10px 8px; }
   .top-strip { font-size: 11px; padding: 6px 0; }
   .top-strip .strip-inner { gap: 4px 8px; }
-  .logo-text .name { font-size: 18px; }
-  .logo-text .tag { display: none; }
-  .logo-mark { width: 38px; height: 38px; }
+  .logo-img { height: 42px; }
+  .logo--footer .logo-img { height: 54px; padding: 8px 14px; }
   .h-action { padding: 6px 8px; }
   .h-action span { display: none; }
   .h-action svg { width: 20px; height: 20px; }

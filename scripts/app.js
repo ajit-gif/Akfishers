@@ -8,7 +8,6 @@
 
   /* ---------- Icons ---------- */
   var ICONS = {
-    fish: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7 3 3.2 5.6 1.5 9.2c-.3.7-.3 1.5 0 2.2C3.2 15 7 17.6 12 17.6s8.8-2.6 10.5-6.2c.3-.7.3-1.5 0-2.2C20.8 5.6 17 3 12 3zm0 3.4c1.2 0 2.2 1 2.2 2.2s-1 2.2-2.2 2.2-2.2-1-2.2-2.2 1-2.2 2.2-2.2zM4.5 10.3c.6-1.2 1.5-2.3 2.6-3.2-.4 1-.6 2.1-.6 3.2s.2 2.2.6 3.2c-1.1-.9-2-2-2.6-3.2z"/></svg>',
     cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 7H6"/></svg>',
     user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
@@ -295,9 +294,8 @@
       '<div class="container">' +
         '<div class="header-main">' +
           '<button class="h-action h-action--mobile" data-open-menu aria-label="Menu">' + ICONS.menu + '</button>' +
-          '<a class="logo" href="/">' +
-            '<span class="logo-mark">' + ICONS.fish + '</span>' +
-            '<span class="logo-text"><span class="name">AK <span>Fishers</span></span><span class="tag">Fresh From The Sea</span></span>' +
+          '<a class="logo" href="/" aria-label="AK Fishers — home">' +
+            '<img class="logo-img" src="/assets/images/logo.png?v=11" alt="AK Fishers — Fresh From The Sea" width="180" height="100">' +
           '</a>' +
           '<div class="loc-selector" data-locator>' +
             '<span class="loc-icon">' + ICONS.pin + '</span>' +
@@ -338,7 +336,7 @@
       '<div class="mobile-menu" data-mobile-menu>' +
         '<div class="mm-backdrop" data-close-menu></div>' +
         '<div class="mm-panel">' +
-          '<div class="mm-head"><a class="logo" href="/"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span></span></a>' +
+          '<div class="mm-head"><a class="logo" href="/" aria-label="AK Fishers — home"><img class="logo-img" src="/assets/images/logo.png?v=11" alt="AK Fishers" width="150" height="83"></a>' +
           '<button class="mm-close" data-close-menu aria-label="Close menu">' + ICONS.close + '</button></div>' +
           '<div class="mm-search"><input type="text" placeholder="Search seafood…" data-mm-search></div>' +
           '<div class="mm-group"><h4>Categories</h4>' +
@@ -435,7 +433,7 @@
       '<div class="container">' +
         '<div class="footer-top">' +
           '<div class="footer-brand">' +
-            '<a class="logo" href="/"><span class="logo-mark">' + ICONS.fish + '</span><span class="logo-text"><span class="name">AK <span>Fishers</span></span><span class="tag">Fresh From The Sea</span></span></a>' +
+            '<a class="logo logo--footer" href="/" aria-label="AK Fishers — home"><img class="logo-img" src="/assets/images/logo.png?v=11" alt="AK Fishers — Fresh From The Sea" width="200" height="111"></a>' +
             '<p>AK Fishers Supplier LLP — fresh seafood delivered from the sea to your doorstep across Mumbai. Carefully selected catch, hygienically cleaned, packed with care.</p>' +
             '<div class="footer-social">' +
               '<a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>' +
