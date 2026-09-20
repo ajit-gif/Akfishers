@@ -464,7 +464,7 @@
           '</ul></div>' +
         '</div>' +
         '<div class="footer-bottom">' +
-          '<span>© ' + new Date().getFullYear() + ' AK Fishers Supplier LLP · All rights reserved</span>' +
+          '<span>© ' + new Date().getFullYear() + ' AK Fishers Supplier LLP · All rights reserved · Website Designed by Taniya</span>' +
           '<div class="pay-badges"><span>UPI</span><span>VISA</span><span>Mastercard</span><span>RuPay</span><span>COD</span></div>' +
         '</div>' +
       '</div>';
