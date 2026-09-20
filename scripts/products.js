@@ -9,11 +9,12 @@ const AKF_DATA_VERSION = "2";
 
 const AKF_IMG = {
   pomfret: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=900&q=80",
-  surmai: "https://images.unsplash.com/photo-1574781330855-d0db8cc6a79c?auto=format&fit=crop&w=900&q=80",
+  surmai: "assets/images/products/surmai.jpg",
+  halwa: "assets/images/products/halwa.jpg",
   rawas: "https://images.unsplash.com/photo-1499125562588-29fb8a56b5d5?auto=format&fit=crop&w=900&q=80",
-  bangda: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?auto=format&fit=crop&w=900&q=80",
+  bangda: "assets/images/products/bangda.jpg",
   prawns: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=900&q=80",
-  crab: "https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&w=900&q=80",
+  crab: "assets/images/products/crab.jpg",
   shellfish: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=900&q=80"
 };
 
@@ -80,8 +81,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 16, isNew: false,
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
-    img: AKF_IMG.pomfret,
-    gallery: [AKF_IMG.pomfret, AKF_IMG.bangda],
+    img: AKF_IMG.halwa,
+    gallery: [AKF_IMG.halwa, AKF_IMG.bangda],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Good source of protein", "Low in fat", "Rich in minerals"]
@@ -231,7 +232,7 @@ const AKF_CATEGORIES = [
   { id: "pomfret", name: "Pomfret", marathi: "पापलेट", img: AKF_IMG.pomfret, desc: "Whole & cut pomfret" },
   { id: "surmai", name: "Surmai", marathi: "सुरमई", img: AKF_IMG.surmai, desc: "King fish steaks & cuts" },
   { id: "rawas", name: "Rawas", marathi: "रावस", img: AKF_IMG.rawas, desc: "Indian salmon" },
-  { id: "halwa", name: "Halwa", marathi: "हलवा", img: AKF_IMG.pomfret, desc: "Tender coastal fish" },
+  { id: "halwa", name: "Halwa", marathi: "हलवा", img: AKF_IMG.halwa, desc: "Tender coastal fish" },
   { id: "bangda", name: "Bangda", marathi: "बांगडा", img: AKF_IMG.bangda, desc: "Indian mackerel" },
   { id: "prawns", name: "Prawns", marathi: "कोळंबी", img: AKF_IMG.prawns, desc: "Fresh prawns" },
   { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.rawas, desc: "Mandeli, bombil & mushi" },
@@ -400,6 +401,7 @@ function akfOgImage(url) {
               .replace(/([?&])h=\d+/, "$1h=630")
       + (/[?&]h=/.test(url) ? "" : "&h=630");
   }
+  if (url && url.indexOf("://") === -1) return "https://akfishers.com/" + url.replace(/^\//, "");
   return url;
 }
 
