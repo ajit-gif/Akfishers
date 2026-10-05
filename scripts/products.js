@@ -8,10 +8,10 @@
 const AKF_DATA_VERSION = "2";
 
 const AKF_IMG = {
-  pomfret: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=900&q=80",
+  pomfret: "assets/images/products/halwa.jpg",
   surmai: "assets/images/products/surmai.jpg",
   halwa: "assets/images/products/halwa.jpg",
-  rawas: "https://images.unsplash.com/photo-1499125562588-29fb8a56b5d5?auto=format&fit=crop&w=900&q=80",
+  rawas: "assets/images/products/surmai.jpg",
   bangda: "assets/images/products/bangda.jpg",
   prawns: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=900&q=80",
   crab: "assets/images/products/crab.jpg",
@@ -48,7 +48,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.surmai,
-    gallery: [AKF_IMG.surmai, AKF_IMG.rawas, AKF_IMG.bangda],
+    gallery: [AKF_IMG.surmai, AKF_IMG.bangda, AKF_IMG.halwa],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Excellent source of protein", "Rich in Omega-3", "Contains Vitamin D"]
@@ -65,7 +65,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.rawas,
-    gallery: [AKF_IMG.rawas, AKF_IMG.surmai, AKF_IMG.bangda],
+    gallery: [AKF_IMG.rawas, AKF_IMG.bangda, AKF_IMG.halwa],
     tags: ["Fresh Catch", "Premium"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Rich in Omega-3 fatty acids", "High-quality protein", "Source of Vitamin B12"]
@@ -149,8 +149,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 18, isNew: false,
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned"],
-    img: AKF_IMG.rawas,
-    gallery: [AKF_IMG.rawas],
+    img: AKF_IMG.bangda,
+    gallery: [AKF_IMG.bangda],
     tags: ["Fresh Catch"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
@@ -235,7 +235,7 @@ const AKF_CATEGORIES = [
   { id: "halwa", name: "Halwa", marathi: "हलवा", img: AKF_IMG.halwa, desc: "Tender coastal fish" },
   { id: "bangda", name: "Bangda", marathi: "बांगडा", img: AKF_IMG.bangda, desc: "Indian mackerel" },
   { id: "prawns", name: "Prawns", marathi: "कोळंबी", img: AKF_IMG.prawns, desc: "Fresh prawns" },
-  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.rawas, desc: "Mandeli, bombil & mushi" },
+  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.bangda, desc: "Mandeli, bombil & mushi" },
   { id: "crabs", name: "Crabs", marathi: "खेकडा", img: AKF_IMG.crab, desc: "Black & red crab" },
   { id: "shellfish", name: "Shellfish", marathi: "शिंपल्या", img: AKF_IMG.shellfish, desc: "Clams & mussels" }
 ];
