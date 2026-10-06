@@ -7,10 +7,10 @@
    stale admin edits saved in localStorage are ignored. */
 const AKF_DATA_VERSION = "2";
 
-/* Fish-free imagery only: shellfish photos (prawns, crab) + a neutral sea graphic. */
+/* Product photos supplied by the owner (pomfret, prawns, crab) + a neutral sea graphic placeholder for the rest. */
 const AKF_IMG = {
   sea: "assets/images/sea.jpg",
-  pomfret: "assets/images/sea.jpg",
+  pomfret: "assets/images/products/pomfret.jpg",
   surmai: "assets/images/sea.jpg",
   rawas: "assets/images/sea.jpg",
   halwa: "assets/images/sea.jpg",
@@ -33,7 +33,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.pomfret,
-    gallery: [AKF_IMG.sea],
+    gallery: [AKF_IMG.pomfret],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["High-quality protein", "Rich in Omega-3", "Low in saturated fat"]
