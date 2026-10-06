@@ -22,7 +22,12 @@ const AKF_IMG = {
   blackCrab: "assets/images/products/black-crab.jpg",
   redCrab: "assets/images/products/red-crab.jpg",
   crab: "assets/images/products/crab.jpg",
-  tisarya: "assets/images/products/tisarya.jpg"
+  tisarya: "assets/images/products/tisarya.jpg",
+  dhoma: "assets/images/products/dhoma.jpg",
+  ghol: "assets/images/products/ghol.jpg",
+  murdi: "assets/images/products/murdi.jpg",
+  singhada: "assets/images/products/singhada.jpg",
+  thamb: "assets/images/products/thamb.jpg"
 };
 
 const AKF_PRODUCTS = [
@@ -229,6 +234,91 @@ const AKF_PRODUCTS = [
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Excellent source of Iron", "High in Vitamin B12", "Rich in protein"]
+  },
+  {
+    id: "dhoma",
+    name: "Dhoma",
+    marathi: "ढोमा",
+    category: "smallfish",
+    desc: "Mild, soft-fleshed local catch that cooks quickly. A good everyday fish for fry and simple coastal curries.",
+    price: 300, priceMax: 300, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Curry Cut"],
+    img: AKF_IMG.dhoma,
+    gallery: [AKF_IMG.dhoma],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "ghol",
+    name: "Ghol",
+    marathi: "घोळ",
+    category: "smallfish",
+    desc: "Large, firm and meaty fish prized for thick steaks. Excellent for tawa fry and rich curries.",
+    price: 1500, priceMax: 1500, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
+    img: AKF_IMG.ghol,
+    gallery: [AKF_IMG.ghol],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "murdi",
+    name: "Murdi",
+    marathi: "मुरडी",
+    category: "smallfish",
+    desc: "Slender, tender local fish. Best shallow-fried whole or cooked in a light masala.",
+    price: 700, priceMax: 700, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000],
+    cuts: ["Whole", "Cleaned"],
+    img: AKF_IMG.murdi,
+    gallery: [AKF_IMG.murdi],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "singhada",
+    name: "Singhada",
+    marathi: "शिंगाडा",
+    category: "smallfish",
+    desc: "Hearty, meaty fish with few bones. Popular for spicy curries and slow-cooked gravies.",
+    price: 700, priceMax: 700, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Curry Cut"],
+    img: AKF_IMG.singhada,
+    gallery: [AKF_IMG.singhada],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "thamb",
+    name: "Thamb",
+    marathi: "तांब",
+    category: "smallfish",
+    desc: "Firm, flavourful reddish fish. Great for tawa fry, grills and Malvani-style curries.",
+    price: 1500, priceMax: 1500, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
+    img: AKF_IMG.thamb,
+    gallery: [AKF_IMG.thamb],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
   }
 ];
 
@@ -242,7 +332,7 @@ const AKF_CATEGORIES = [
   { id: "halwa", name: "Halwa", marathi: "हलवा", img: AKF_IMG.halwa, desc: "Tender coastal fish" },
   { id: "bangda", name: "Bangda", marathi: "बांगडा", img: AKF_IMG.bangda, desc: "Indian mackerel" },
   { id: "prawns", name: "Prawns", marathi: "कोळंबी", img: AKF_IMG.prawns, desc: "Fresh prawns" },
-  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.mandeli, desc: "Mandeli, bombil & mushi" },
+  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.mandeli, desc: "Mandeli, bombil, mushi & more" },
   { id: "crabs", name: "Crabs", marathi: "खेकडा", img: AKF_IMG.crab, desc: "Black & red crab" },
   { id: "shellfish", name: "Shellfish", marathi: "शिंपल्या", img: AKF_IMG.tisarya, desc: "Clams & mussels" }
 ];
