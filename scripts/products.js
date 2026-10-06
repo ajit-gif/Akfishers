@@ -319,6 +319,57 @@ const AKF_PRODUCTS = [
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "tiger-prawns",
+    name: "Tiger Prawns",
+    marathi: "टायगर कोळंबी",
+    category: "prawns",
+    desc: "Large, meaty tiger prawns with a sweet, firm bite. Ideal for grills, butter garlic and rich coastal curries. Rate is for cleaned quantity.",
+    price: 1500, priceMax: 1500, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Deveined"],
+    img: AKF_IMG.sea,
+    gallery: [AKF_IMG.sea],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "lepa",
+    name: "Lepa (Sole)",
+    marathi: "लेप",
+    category: "smallfish",
+    desc: "Flat, delicate sole with soft white flesh. Lovely pan-fried or in a light masala.",
+    price: 550, priceMax: 550, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000],
+    cuts: ["Whole", "Cleaned"],
+    img: AKF_IMG.sea,
+    gallery: [AKF_IMG.sea],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "rohu",
+    name: "Rohu",
+    marathi: "रोहू",
+    category: "smallfish",
+    desc: "Popular freshwater fish with firm, mildly sweet flesh. A favourite for curries and fry.",
+    price: 800, priceMax: 800, oldPrice: 0,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 20, isNew: true,
+    weights: [250, 500, 1000, 2000],
+    cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
+    img: AKF_IMG.sea,
+    gallery: [AKF_IMG.sea],
+    tags: ["Fresh Catch", "Hygienically Cleaned"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["Good source of protein", "Low in fat"]
   }
 ];
 
