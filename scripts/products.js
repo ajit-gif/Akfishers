@@ -7,15 +7,17 @@
    stale admin edits saved in localStorage are ignored. */
 const AKF_DATA_VERSION = "2";
 
+/* Fish-free imagery only: shellfish photos (prawns, crab) + a neutral sea graphic. */
 const AKF_IMG = {
-  pomfret: "assets/images/products/halwa.jpg",
-  surmai: "assets/images/products/surmai.jpg",
-  halwa: "assets/images/products/halwa.jpg",
-  rawas: "assets/images/products/surmai.jpg",
-  bangda: "assets/images/products/bangda.jpg",
+  sea: "assets/images/sea.jpg",
+  pomfret: "assets/images/sea.jpg",
+  surmai: "assets/images/sea.jpg",
+  rawas: "assets/images/sea.jpg",
+  halwa: "assets/images/sea.jpg",
+  bangda: "assets/images/sea.jpg",
   prawns: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=900&q=80",
   crab: "assets/images/products/crab.jpg",
-  shellfish: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=900&q=80"
+  shellfish: "assets/images/sea.jpg"
 };
 
 const AKF_PRODUCTS = [
@@ -31,7 +33,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.pomfret,
-    gallery: [AKF_IMG.pomfret, AKF_IMG.bangda, AKF_IMG.surmai],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["High-quality protein", "Rich in Omega-3", "Low in saturated fat"]
@@ -48,7 +50,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.surmai,
-    gallery: [AKF_IMG.surmai, AKF_IMG.bangda, AKF_IMG.halwa],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Excellent source of protein", "Rich in Omega-3", "Contains Vitamin D"]
@@ -65,7 +67,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.rawas,
-    gallery: [AKF_IMG.rawas, AKF_IMG.bangda, AKF_IMG.halwa],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Premium"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Rich in Omega-3 fatty acids", "High-quality protein", "Source of Vitamin B12"]
@@ -82,7 +84,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
     img: AKF_IMG.halwa,
-    gallery: [AKF_IMG.halwa, AKF_IMG.bangda],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Good source of protein", "Low in fat", "Rich in minerals"]
@@ -99,7 +101,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut"],
     img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.bangda, AKF_IMG.surmai],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["High in Omega-3", "Rich in Vitamin B12", "Good source of Selenium"]
@@ -116,7 +118,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Deveined"],
     img: AKF_IMG.prawns,
-    gallery: [AKF_IMG.prawns, AKF_IMG.bangda],
+    gallery: [AKF_IMG.prawns],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["High in protein", "Low in calories", "Rich in Selenium"]
@@ -133,7 +135,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned"],
     img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.bangda],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Rich in Calcium", "High in protein", "Source of Omega-3"]
@@ -150,7 +152,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned"],
     img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.bangda],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
@@ -167,7 +169,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Curry Cut", "Cleaned"],
     img: AKF_IMG.surmai,
-    gallery: [AKF_IMG.surmai],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Boneless"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["High in protein", "Low in fat"]
@@ -218,7 +220,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned", "Shelled"],
     img: AKF_IMG.shellfish,
-    gallery: [AKF_IMG.shellfish, AKF_IMG.prawns],
+    gallery: [AKF_IMG.sea],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Excellent source of Iron", "High in Vitamin B12", "Rich in protein"]
