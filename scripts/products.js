@@ -7,17 +7,22 @@
    stale admin edits saved in localStorage are ignored. */
 const AKF_DATA_VERSION = "2";
 
-/* Product photos supplied by the owner (pomfret, prawns, crab) + a neutral sea graphic placeholder for the rest. */
+/* Product photos supplied by the owner (assets/images/products/). sea.jpg is a neutral graphic used for page banners. */
 const AKF_IMG = {
   sea: "assets/images/sea.jpg",
   pomfret: "assets/images/products/pomfret.jpg",
-  surmai: "assets/images/sea.jpg",
-  rawas: "assets/images/sea.jpg",
-  halwa: "assets/images/sea.jpg",
-  bangda: "assets/images/sea.jpg",
-  prawns: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=900&q=80",
+  surmai: "assets/images/products/surmai.jpg",
+  rawas: "assets/images/products/rawas.jpg",
+  halwa: "assets/images/products/halwa.jpg",
+  bangda: "assets/images/products/bangda.jpg",
+  prawns: "assets/images/products/prawns.jpg",
+  mandeli: "assets/images/products/mandeli.jpg",
+  bombil: "assets/images/products/bombil.jpg",
+  mushi: "assets/images/products/mushi.jpg",
+  blackCrab: "assets/images/products/black-crab.jpg",
+  redCrab: "assets/images/products/red-crab.jpg",
   crab: "assets/images/products/crab.jpg",
-  shellfish: "assets/images/sea.jpg"
+  tisarya: "assets/images/products/tisarya.jpg"
 };
 
 const AKF_PRODUCTS = [
@@ -50,7 +55,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.surmai,
-    gallery: [AKF_IMG.sea],
+    gallery: [AKF_IMG.surmai],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Excellent source of protein", "Rich in Omega-3", "Contains Vitamin D"]
@@ -67,7 +72,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut", "Fillet"],
     img: AKF_IMG.rawas,
-    gallery: [AKF_IMG.sea],
+    gallery: [AKF_IMG.rawas],
     tags: ["Fresh Catch", "Premium"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Rich in Omega-3 fatty acids", "High-quality protein", "Source of Vitamin B12"]
@@ -84,7 +89,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
     img: AKF_IMG.halwa,
-    gallery: [AKF_IMG.sea],
+    gallery: [AKF_IMG.halwa],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["Good source of protein", "Low in fat", "Rich in minerals"]
@@ -101,7 +106,7 @@ const AKF_PRODUCTS = [
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut"],
     img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.sea],
+    gallery: [AKF_IMG.bangda],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["High in Omega-3", "Rich in Vitamin B12", "Good source of Selenium"]
@@ -134,8 +139,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 22, isNew: false,
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned"],
-    img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.sea],
+    img: AKF_IMG.mandeli,
+    gallery: [AKF_IMG.mandeli],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Rich in Calcium", "High in protein", "Source of Omega-3"]
@@ -151,8 +156,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 18, isNew: false,
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned"],
-    img: AKF_IMG.bangda,
-    gallery: [AKF_IMG.sea],
+    img: AKF_IMG.bombil,
+    gallery: [AKF_IMG.bombil],
     tags: ["Fresh Catch"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
@@ -168,8 +173,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 12, isNew: false,
     weights: [250, 500, 1000, 2000],
     cuts: ["Curry Cut", "Cleaned"],
-    img: AKF_IMG.surmai,
-    gallery: [AKF_IMG.sea],
+    img: AKF_IMG.mushi,
+    gallery: [AKF_IMG.mushi],
     tags: ["Fresh Catch", "Boneless"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste. Can be frozen for up to 2 weeks.",
     nutrition: ["High in protein", "Low in fat"]
@@ -185,8 +190,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 10, isNew: false,
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Halved"],
-    img: AKF_IMG.crab,
-    gallery: [AKF_IMG.crab, AKF_IMG.prawns],
+    img: AKF_IMG.blackCrab,
+    gallery: [AKF_IMG.blackCrab],
     tags: ["Fresh Catch", "Premium"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Rich in protein", "High in Zinc", "Source of Vitamin B12"]
@@ -202,8 +207,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 10, isNew: false,
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Halved"],
-    img: AKF_IMG.crab,
-    gallery: [AKF_IMG.crab, AKF_IMG.prawns],
+    img: AKF_IMG.redCrab,
+    gallery: [AKF_IMG.redCrab],
     tags: ["Fresh Catch", "Premium"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Rich in protein", "High in Zinc", "Source of Copper"]
@@ -219,8 +224,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 20, isNew: false,
     weights: [250, 500, 1000],
     cuts: ["Whole", "Cleaned", "Shelled"],
-    img: AKF_IMG.shellfish,
-    gallery: [AKF_IMG.sea],
+    img: AKF_IMG.tisarya,
+    gallery: [AKF_IMG.tisarya],
     tags: ["Fresh Catch", "Value Pick"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Excellent source of Iron", "High in Vitamin B12", "Rich in protein"]
@@ -237,9 +242,9 @@ const AKF_CATEGORIES = [
   { id: "halwa", name: "Halwa", marathi: "हलवा", img: AKF_IMG.halwa, desc: "Tender coastal fish" },
   { id: "bangda", name: "Bangda", marathi: "बांगडा", img: AKF_IMG.bangda, desc: "Indian mackerel" },
   { id: "prawns", name: "Prawns", marathi: "कोळंबी", img: AKF_IMG.prawns, desc: "Fresh prawns" },
-  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.bangda, desc: "Mandeli, bombil & mushi" },
+  { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.mandeli, desc: "Mandeli, bombil & mushi" },
   { id: "crabs", name: "Crabs", marathi: "खेकडा", img: AKF_IMG.crab, desc: "Black & red crab" },
-  { id: "shellfish", name: "Shellfish", marathi: "शिंपल्या", img: AKF_IMG.shellfish, desc: "Clams & mussels" }
+  { id: "shellfish", name: "Shellfish", marathi: "शिंपल्या", img: AKF_IMG.tisarya, desc: "Clams & mussels" }
 ];
 
 /* ============================================================
