@@ -76,3 +76,31 @@
   .promise-band { border-radius: var(--r-lg); }
   .app-strip { padding: 26px 22px; }
 }
+/* ---------- Why AK Fishers ---------- */
+.why-section { background: linear-gradient(180deg, #fff 0%, var(--ocean-50) 100%); }
+.wy-accent { color: var(--ocean-500); }
+.wy-stats { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 940px; margin: 0 auto 38px; background: var(--navy); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); overflow: hidden; }
+.wy-stat { padding: 24px 16px; text-align: center; color: #fff; }
+.wy-stat + .wy-stat { border-left: 1px solid rgba(255,255,255,0.12); }
+.wy-stat b { display: block; font-family: var(--font-display); font-size: 34px; line-height: 1.1; color: #fff; }
+.wy-stat b small { font-size: 22px; color: #f5b342; margin-left: 3px; }
+.wy-stat span { display: block; margin-top: 6px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em; color: var(--ocean-200); }
+.wy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.wy-card { position: relative; background: #fff; border: 1px solid var(--line-soft); border-radius: var(--r-lg); padding: 30px 26px 26px; overflow: hidden; }
+.wy-card::before { content: ""; position: absolute; left: 0; top: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--ocean-500), var(--aqua)); transition: width 0.35s ease; }
+.wy-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--ocean-200); }
+.wy-card:hover::before { width: 100%; }
+.wy-num { position: absolute; right: 20px; top: 14px; font-family: var(--font-display); font-size: 44px; font-weight: 700; color: var(--ocean-100); line-height: 1; }
+.wy-icon { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, var(--ocean-600), var(--ocean-400)); box-shadow: 0 10px 22px rgba(18, 127, 176, 0.3); margin-bottom: 18px; position: relative; }
+.wy-icon svg { width: 26px; height: 26px; }
+.wy-card h3 { font-size: 18px; margin-bottom: 8px; position: relative; }
+.wy-card p { font-size: 14px; color: var(--muted); line-height: 1.7; position: relative; }
+.wy-cta { margin-top: 34px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: 30px 34px; border-radius: var(--r-xl); color: #fff; background: radial-gradient(60% 120% at 90% 0%, rgba(34, 184, 224, 0.35), transparent 70%), linear-gradient(120deg, var(--ocean-900), var(--ocean-700)); box-shadow: var(--shadow-lg); }
+.wy-cta h3 { color: #fff; font-size: 22px; margin-bottom: 6px; }
+.wy-cta p { color: #c3dbe9; font-size: 14.5px; max-width: 520px; }
+.wy-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.wy-card, .wy-stat, .wy-cta { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, opacity 0.6s ease; }
+.wy-hide { opacity: 0; transform: translateY(18px); }
+@media (max-width: 900px) { .wy-grid { grid-template-columns: repeat(2, 1fr); } .wy-stats { grid-template-columns: repeat(2, 1fr); } .wy-stat:nth-child(3) { border-left: 0; } .wy-stat:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,0.12); } }
+@media (max-width: 640px) { .wy-grid { grid-template-columns: 1fr; } .wy-card { padding: 24px 20px 22px; } .wy-stat b { font-size: 28px; } .wy-cta { padding: 24px 20px; } .wy-cta-btns, .wy-cta-btns .btn { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .wy-hide { opacity: 1; transform: none; } .wy-card, .wy-stat, .wy-cta { transition: none; } }
