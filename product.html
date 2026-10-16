@@ -11,21 +11,21 @@
   <meta property="og:title" content="Fresh Seafood — AK Fishers">
   <meta property="og:description" content="Fresh seafood product details — choose weight, cleaning preference and order fresh delivery in Mumbai.">
   <meta property="og:url" content="https://akfishers.com/product">
-  <meta property="og:image" content="https://akfishers.com/assets/images/og-image.png?v=22">
+  <meta property="og:image" content="https://akfishers.com/assets/images/og-image.png?v=23">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Fresh Seafood — AK Fishers">
   <meta name="twitter:description" content="Fresh seafood product details — choose weight, cleaning preference and order fresh delivery in Mumbai.">
-  <meta name="twitter:image" content="https://akfishers.com/assets/images/og-image.png?v=22">
+  <meta name="twitter:image" content="https://akfishers.com/assets/images/og-image.png?v=23">
   <title>Product — AK Fishers</title>
   <meta name="description" content="Fresh seafood product details — choose weight, cleaning preference and order fresh delivery in Mumbai.">
-  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=22">
-  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=22">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=23">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=22">
+  <link rel="stylesheet" href="styles/shared.css?v=23">
   <script type="application/ld+json" id="ld-product">{}</script>
   <script type="application/ld+json" id="ld-breadcrumb">{}</script>
 </head>
@@ -78,8 +78,8 @@
 
   <footer class="site-footer"></footer>
 
-  <script src="scripts/products.js?v=22"></script>
-  <script src="scripts/app.js?v=22"></script>
+  <script src="scripts/products.js?v=23"></script>
+  <script src="scripts/app.js?v=23"></script>
   <script>
     (function () {
       "use strict";
@@ -96,7 +96,7 @@
         var SITE = "https://akfishers.com";
         var url = SITE + "/product?id=" + encodeURIComponent(id);
         var img = akfOgImage(p.img);
-        var priceLabel = (p.priceMax && p.priceMax > p.price)
+        var priceLabel = p.priceOnRequest ? "on request" : (p.priceMax && p.priceMax > p.price)
           ? akfFormatINR(p.price) + " – " + akfFormatINR(p.priceMax) + " / kg"
           : akfFormatINR(p.price) + " / kg";
         var clean = function (s) { return String(s || "").replace(/\s+/g, " ").trim(); };
@@ -104,7 +104,7 @@
 
         var seoTitle = "Buy Fresh " + p.name + " Online in Mumbai | AK Fishers";
         var seoDesc = clean(p.desc + " Order " + p.name + " (" + p.marathi +
-          ") online from AK Fishers — hygienically cleaned and cut free of cost, delivered fresh across Mumbai. Indicative price " + priceLabel + ".");
+          ") online from AK Fishers — hygienically cleaned and cut free of cost, delivered fresh across Mumbai. " + (p.priceOnRequest ? "Price on request." : "Indicative price " + priceLabel + "."));
 
         document.title = seoTitle;
 
@@ -134,7 +134,7 @@
           "sku": id,
           "category": catName,
           "brand": { "@type": "Brand", "name": "AK Fishers" },
-          "offers": {
+          "offers": p.priceOnRequest ? undefined : {
             "@type": "AggregateOffer",
             "priceCurrency": "INR",
             "lowPrice": p.price,
@@ -199,13 +199,14 @@
               '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Cleaned To Order</li>' +
             '</ul>' +
 
-            '<div class="pd-price-block">' +
+            (p.priceOnRequest ? '<div class="pd-price-block"><div class="pp-row"><span class="pp-now">Price on request</span></div><div class="pp-note">Message us for the current rate — we will confirm the price and availability for you.</div></div>' : '') +
+            (p.priceOnRequest ? '' : '<div class="pd-price-block">' +
               '<div class="pp-row">' +
                 '<span class="pp-now">' + akfFormatINR(price) + '</span>' +
                 (oldPrice ? '<span class="pp-old">' + akfFormatINR(oldPrice) + '</span><span class="pp-save">Save ' + akfFormatINR(oldPrice - price) + '</span>' : '') +
               '</div>' +
               '<div class="pp-note">' + (selWeight ? 'Indicative price for ' + (selWeight >= 1000 ? (selWeight / 1000) + 'kg' : selWeight + 'g') + ' at ' + akfFormatINR(p.price) + '/kg · ' : '') + 'final rate confirmed on your order (typically ' + akfFormatINR(p.price) + ' – ' + akfFormatINR(p.priceMax || p.price) + '/kg)</div>' +
-            '</div>' +
+            '</div>') +
 
             '<div class="option-block">' +
               '<h4>Select Weight <span class="ob-hint">approx.</span></h4>' +
@@ -213,7 +214,7 @@
                 p.weights.map(function (w) {
                   return '<div class="option-pill ' + (w === selWeight ? "active" : "") + '" data-weight="' + w + '">' +
                     '<div class="op-main">' + (w >= 1000 ? (w / 1000) + " kg" : w + "g") + '</div>' +
-                    '<div class="op-sub">' + akfFormatINR(p.price * (w / 1000)) + '</div>' +
+                    (p.priceOnRequest ? '' : '<div class="op-sub">' + akfFormatINR(p.price * (w / 1000)) + '</div>') +
                   '</div>';
                 }).join("") +
               '</div>' +
@@ -230,18 +231,21 @@
               '</div>' +
             '</div>' +
 
-            '<div class="qty-row">' +
+            (p.priceOnRequest ? '' : '<div class="qty-row">' +
               '<div class="qty-stepper">' +
                 '<button data-qty="-1" aria-label="Decrease">−</button>' +
                 '<span class="qty-val" id="qtyVal">' + qty + '</span>' +
                 '<button data-qty="1" aria-label="Increase">+</button>' +
               '</div>' +
               '<span class="text-muted" style="font-size:13.5px">Total: <b id="totalPrice" style="color:var(--ink)">' + akfFormatINR(price * qty) + '</b></span>' +
-            '</div>' +
+            '</div>') +
 
             '<div class="pd-ctas">' +
-              '<button class="btn btn--primary" id="addToCart">Add To Cart</button>' +
-              '<button class="btn btn--aqua" id="buyNow">Buy Now</button>' +
+              (p.priceOnRequest
+                ? '<a class="btn btn--primary" href="' + akfAskPriceLink(p) + '" target="_blank" rel="noopener">Ask for price on WhatsApp</a>' +
+                  '<a class="btn btn--aqua" href="tel:+918108106522">Call +91 81081 06522</a>'
+                : '<button class="btn btn--primary" id="addToCart">Add To Cart</button>' +
+                  '<button class="btn btn--aqua" id="buyNow">Buy Now</button>') +
               '<button class="btn btn--ghost" id="wishBtn">' +
                 '<svg viewBox="0 0 24 24" fill="' + (AKF_WISH.has(p.id) ? "currentColor" : "none") + '" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 21s-7.5-4.7-10-9.3C.6 8.6 2.4 5 5.8 5c2 0 3.4 1 4.2 2.4C10.8 6 12.2 5 14.2 5c3.4 0 5.2 3.6 3.8 6.7C19.5 16.3 12 21 12 21z"/></svg>' +
                 '<span>Wishlist</span>' +
@@ -340,13 +344,15 @@
         });
 
         // Add to cart
-        document.getElementById("addToCart").addEventListener("click", function () {
+        var addBtn = document.getElementById("addToCart");
+        if (addBtn) addBtn.addEventListener("click", function () {
           AKF_CART.add(p.id, selWeight, selCut, qty);
           AKF_TOAST(p.name + " (" + (selWeight >= 1000 ? selWeight / 1000 + "kg" : selWeight + "g") + ", " + selCut + ") added to cart", "success");
         });
 
         // Buy now
-        document.getElementById("buyNow").addEventListener("click", function () {
+        var buyBtn = document.getElementById("buyNow");
+        if (buyBtn) buyBtn.addEventListener("click", function () {
           AKF_CART.add(p.id, selWeight, selCut, qty);
           window.location.href = "/checkout";
         });
@@ -360,6 +366,7 @@
       }
 
       function updatePrice() {
+        if (p.priceOnRequest) return;
         var price = unitPrice();
         document.querySelector(".pp-now").innerHTML = akfFormatINR(price);
         var oldEl = document.querySelector(".pp-old");

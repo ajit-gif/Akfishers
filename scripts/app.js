@@ -80,6 +80,8 @@
     get: readCart,
     set: writeCart,
     add: function (productId, weight, cut, qty) {
+      var prod = window.akfGetProduct ? akfGetProduct(productId) : null;
+      if (prod && prod.priceOnRequest) return readCart();   // price not listed — cannot be ordered online
       var cart = readCart();
       var existing = cart.find(function (i) { return i.id === productId && i.weight === weight && i.cut === cut; });
       if (existing) {
@@ -501,6 +503,7 @@
       var id = addBtn.getAttribute("data-add");
       var p = akfGetProduct(id);
       if (!p) return;
+      if (p.priceOnRequest) { window.open(akfAskPriceLink(p), "_blank", "noopener"); return; }
       var weight = p.weights[1] || p.weights[0] || 500;
       var cut = p.cuts[0];
       AKF_CART.add(id, weight, cut, 1);

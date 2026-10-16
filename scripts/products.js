@@ -28,7 +28,8 @@ const AKF_IMG = {
   murdi: "assets/images/products/murdi.jpg",
   singhada: "assets/images/products/singhada.jpg",
   thamb: "assets/images/products/thamb.jpg",
-  rohu: "assets/images/products/rohu.jpg?v=2"
+  rohu: "assets/images/products/rohu.jpg?v=2",
+  lobster: "assets/images/products/lobster.jpg"
 };
 
 const AKF_PRODUCTS = [
@@ -371,6 +372,23 @@ const AKF_PRODUCTS = [
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
+  },
+  {
+    id: "lobster",
+    name: "Lobster",
+    marathi: "शेवंड",
+    category: "crabs",
+    desc: "Fresh spiny lobster with sweet, firm meat. A premium catch for grills, butter garlic and festive dinners. Price on request — message us for today's rate.",
+    price: 0, priceMax: 0, oldPrice: 0, priceOnRequest: true,
+    unit: "kg", rating: 0, reviews: 0, sold: 0,
+    badge: "", stock: 5, isNew: true,
+    weights: [500, 1000, 2000],
+    cuts: ["Whole", "Cleaned"],
+    img: AKF_IMG.lobster,
+    gallery: [AKF_IMG.lobster],
+    tags: ["Fresh Catch", "Premium"],
+    storage: "Store at 0–4°C and cook within 24 hours for best taste.",
+    nutrition: ["High in protein", "Low in fat", "Source of zinc"]
   }
 ];
 
@@ -385,7 +403,7 @@ const AKF_CATEGORIES = [
   { id: "bangda", name: "Bangda", marathi: "बांगडा", img: AKF_IMG.bangda, desc: "Indian mackerel" },
   { id: "prawns", name: "Prawns", marathi: "कोळंबी", img: AKF_IMG.prawns, desc: "Fresh prawns" },
   { id: "smallfish", name: "Local Catch", marathi: "मासळी", img: AKF_IMG.mandeli, desc: "Mandeli, bombil, mushi & more" },
-  { id: "crabs", name: "Crabs", marathi: "खेकडा", img: AKF_IMG.crab, desc: "Black & red crab" },
+  { id: "crabs", name: "Crabs", marathi: "खेकडा", img: AKF_IMG.crab, desc: "Crabs & lobster" },
   { id: "shellfish", name: "Shellfish", marathi: "शिंपल्या", img: AKF_IMG.tisarya, desc: "Clams & mussels" }
 ];
 
@@ -576,8 +594,14 @@ function akfBadgeHTML(p) {
   return h;
 }
 
+/* WhatsApp link for products whose price is not listed yet */
+function akfAskPriceLink(p) {
+  return "https://wa.me/918108106522?text=" + encodeURIComponent("Hi AK Fishers, what is today's price for " + p.name + "?");
+}
+
 /* Price shown on cards / listings: indicative per-kg range */
 function akfPriceRangeHTML(p) {
+  if (p.priceOnRequest) return '<span class="pc-price">Price on request</span>';
   if (p.oldPrice && p.oldPrice > p.price) {
     return '<span class="pc-price">' + akfFormatINR(p.price) + ' <small>/ ' + p.unit + '</small></span>' +
            '<span class="pc-price-old">' + akfFormatINR(p.oldPrice) + '</span>';
@@ -607,7 +631,9 @@ function akfProductCardHTML(p) {
       metaHTML +
       '<div class="pc-price-row">' + akfPriceRangeHTML(p) + '</div>' +
       '<div class="pc-actions">' +
-        '<a class="btn btn--primary btn--sm" href="/product?id=' + p.id + '">Choose &amp; Add</a>' +
+        (p.priceOnRequest
+          ? '<a class="btn btn--primary btn--sm" href="' + akfAskPriceLink(p) + '" target="_blank" rel="noopener">Ask for price</a>'
+          : '<a class="btn btn--primary btn--sm" href="/product?id=' + p.id + '">Choose &amp; Add</a>') +
       '</div>' +
     '</div>' +
   '</article>';
