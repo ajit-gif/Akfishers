@@ -7,12 +7,12 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Your Cart — AK Fishers</title>
   <meta name="description" content="Review your fresh seafood order — weights, cutting preferences and delivery charges.">
-  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=20">
-  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=20">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=21">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=21">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=20">
+  <link rel="stylesheet" href="styles/shared.css?v=21">
 </head>
 <body>
 
@@ -39,8 +39,8 @@
 
   <footer class="site-footer"></footer>
 
-  <script src="scripts/products.js?v=20"></script>
-  <script src="scripts/app.js?v=20"></script>
+  <script src="scripts/products.js?v=21"></script>
+  <script src="scripts/app.js?v=21"></script>
   <script>
     (function () {
       "use strict";
@@ -142,6 +142,7 @@
             (delivery > 0 ? '<div class="cs-note">Add ' + akfFormatINR(999 - subtotal) + ' more to get <b>FREE delivery</b> 🚚</div>' : '<div class="cs-note">🎉 You\'ve unlocked <b>FREE delivery</b> on this order!</div>') +
             '<a class="btn btn--primary btn--block mt-16" href="/checkout">Proceed To Checkout →</a>' +
             '<div class="cs-note" style="margin-top:12px">💳 Secure payments · UPI, Cards, Net Banking &amp; COD available</div>' +
+            akfUpiPanel(total) +
           '</aside>';
       }
 

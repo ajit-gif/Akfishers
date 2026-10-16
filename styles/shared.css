@@ -886,3 +886,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   .promise-grid { grid-template-columns: 1fr; }
   .cat-grid { grid-template-columns: 1fr 1fr; }
 }
+/* UPI payment panel (cart + checkout) */
+.upi-panel { margin-top: 18px; padding: 16px; border: 1.5px dashed var(--ocean-300); border-radius: var(--r-md); background: var(--ocean-50); text-align: center; }
+.upi-panel h4 { font-size: 15px; margin-bottom: 10px; color: var(--navy); }
+.upi-qr { display: block; width: 100%; max-width: 260px; height: auto; margin: 0 auto 12px; border-radius: 12px; background: #fff; }
+.upi-id { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 12px; word-break: break-all; }
+.upi-id button { border: 1px solid var(--ocean-400); background: #fff; color: var(--ocean-600); border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.upi-open { display: none; margin-bottom: 10px; }
+.upi-note { font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); text-align: left; }
+@media (max-width: 900px) { .upi-open { display: flex; } }

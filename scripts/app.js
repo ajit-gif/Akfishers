@@ -264,6 +264,29 @@
   }
   window.AKF_TOAST = toast;
 
+  /* ---------- UPI payment panel (QR + ID) ---------- */
+  window.AKF_UPI = { id: "kishanpawar06-1@okhdfcbank", name: "AK Fishers" };
+  window.akfUpiPanel = function (amount) {
+    var amt = Math.round(Number(amount) || 0);
+    var link = "upi://pay?pa=" + encodeURIComponent(AKF_UPI.id) + "&pn=" + encodeURIComponent(AKF_UPI.name) +
+      (amt > 0 ? "&am=" + amt + "&cu=INR" : "");
+    return '<div class="upi-panel">' +
+      '<h4>Pay by UPI</h4>' +
+      '<img class="upi-qr" src="/assets/images/upi-qr.png" alt="UPI QR code — scan to pay AK Fishers" width="280" height="315">' +
+      '<div class="upi-id"><span>' + AKF_UPI.id + '</span><button type="button" data-copy-upi>Copy ID</button></div>' +
+      (amt > 0 ? '<a class="btn btn--primary btn--block upi-open" href="' + link + '">Pay ' + akfFormatINR(amt) + ' in your UPI app</a>' : '') +
+      '<p class="upi-note">Scan with any UPI app (GPay, PhonePe, Paytm…) and pay' + (amt > 0 ? ' <b>' + akfFormatINR(amt) + '</b>' : '') +
+      '. After paying, send the payment screenshot with your order number on WhatsApp +91 81081 06522 so we can confirm it. The final bill is confirmed on call.</p>' +
+    '</div>';
+  };
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-copy-upi]");
+    if (!b) return;
+    var done = function () { toast("UPI ID copied", "success"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(AKF_UPI.id).then(done, function () {});
+    else { var t = document.createElement("textarea"); t.value = AKF_UPI.id; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); done(); } catch (x) {} t.remove(); }
+  });
+
   /* ---------- Cart badge ---------- */
   function updateCartBadge() {
     var count = AKF_CART.count();
