@@ -472,6 +472,7 @@
             '<li><a href="/shop">Shop</a></li>' +
             '<li><a href="/shop">Categories</a></li>' +
             '<li><a href="/about">About Us</a></li>' +
+            '<li><a href="/reviews">Customer Reviews</a></li>' +
             '<li><a href="/contact">Contact Us</a></li>' +
           '</ul></div>' +
           '<div class="footer-col"><h4>Customer Links</h4><ul>' +

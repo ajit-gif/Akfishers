@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://akfishers.com/reviews">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AK Fishers">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:title" content="Customer Reviews — AK Fishers">
+  <meta property="og:description" content="Read what customers say about AK Fishers — 58 Google reviews, rated 4.9 out of 5 for fresh seafood and reliable delivery in Mumbai.">
+  <meta property="og:url" content="https://akfishers.com/reviews">
+  <meta property="og:image" content="https://akfishers.com/assets/images/og-image.png?v=24">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Customer Reviews — AK Fishers">
+  <meta name="twitter:description" content="Read what customers say about AK Fishers — 58 Google reviews, rated 4.9 out of 5 for fresh seafood and reliable delivery in Mumbai.">
+  <meta name="twitter:image" content="https://akfishers.com/assets/images/og-image.png?v=24">
+  <title>Customer Reviews — AK Fishers</title>
+  <meta name="description" content="Read what customers say about AK Fishers — 58 Google reviews, rated 4.9 out of 5 for fresh seafood and reliable delivery in Mumbai.">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=24">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=24">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css?v=24">
+  </head>
+<body>
+
+  <header class="site-header"></header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Customer Reviews</h1>
+        <p>What Mumbai families say about AK Fishers — straight from our Google reviews.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div id="rvSummary"></div>
+        <div class="rv-grid" id="rvGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"></footer>
+
+  <script src="scripts/products.js?v=24"></script>
+  <script src="scripts/reviews.js?v=24"></script>
+  <script src="scripts/app.js?v=24"></script>
+  <script>
+    document.getElementById("rvSummary").innerHTML = akfReviewsSummaryHTML(false);
+    document.getElementById("rvGrid").innerHTML = AKF_REVIEWS.map(akfReviewCardHTML).join("");
+  </script>
+</body>
+</html>
