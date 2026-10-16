@@ -10,24 +10,25 @@ const AKF_DATA_VERSION = "2";
 /* Product photos supplied by the owner (assets/images/products/). sea.jpg is a neutral graphic used for page banners. */
 const AKF_IMG = {
   sea: "assets/images/sea.jpg",
-  pomfret: "assets/images/products/pomfret.jpg",
-  surmai: "assets/images/products/surmai.jpg",
+  pomfret: "assets/images/products/pomfret.jpg?v=2",
+  surmai: "assets/images/products/surmai.jpg?v=2",
   rawas: "assets/images/products/rawas.jpg",
-  halwa: "assets/images/products/halwa.jpg",
-  bangda: "assets/images/products/bangda.jpg",
-  prawns: "assets/images/products/prawns.jpg",
-  mandeli: "assets/images/products/mandeli.jpg",
-  bombil: "assets/images/products/bombil.jpg",
-  mushi: "assets/images/products/mushi.jpg",
+  halwa: "assets/images/products/halwa.jpg?v=2",
+  bangda: "assets/images/products/bangda.jpg?v=2",
+  prawns: "assets/images/products/prawns.jpg?v=2",
+  mandeli: "assets/images/products/mandeli.jpg?v=2",
+  bombil: "assets/images/products/bombil.jpg?v=2",
+  mushi: "assets/images/products/mushi.jpg?v=2",
   blackCrab: "assets/images/products/black-crab.jpg",
   redCrab: "assets/images/products/red-crab.jpg",
-  crab: "assets/images/products/crab.jpg",
+  crab: "assets/images/products/crab.jpg?v=2",
   tisarya: "assets/images/products/tisarya.jpg",
   dhoma: "assets/images/products/dhoma.jpg",
   ghol: "assets/images/products/ghol.jpg",
   murdi: "assets/images/products/murdi.jpg",
   singhada: "assets/images/products/singhada.jpg",
-  thamb: "assets/images/products/thamb.jpg"
+  thamb: "assets/images/products/thamb.jpg",
+  rohu: "assets/images/products/rohu.jpg?v=2"
 };
 
 const AKF_PRODUCTS = [
@@ -365,8 +366,8 @@ const AKF_PRODUCTS = [
     badge: "", stock: 20, isNew: true,
     weights: [250, 500, 1000, 2000],
     cuts: ["Whole", "Cleaned", "Curry Cut", "Steak Cut"],
-    img: AKF_IMG.sea,
-    gallery: [AKF_IMG.sea],
+    img: AKF_IMG.rohu,
+    gallery: [AKF_IMG.rohu],
     tags: ["Fresh Catch", "Hygienically Cleaned"],
     storage: "Store at 0–4°C and cook within 24 hours for best taste.",
     nutrition: ["Good source of protein", "Low in fat"]
