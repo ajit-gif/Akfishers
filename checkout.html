@@ -7,12 +7,12 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Checkout — AK Fishers</title>
   <meta name="description" content="Complete your fresh seafood order — delivery details, slots and payment.">
-  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=31">
-  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=31">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=32">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=31">
+  <link rel="stylesheet" href="styles/shared.css?v=32">
 </head>
 <body>
 
@@ -93,13 +93,15 @@
         <b id="cancelCountdown">10:00</b>.
         <button class="btn btn--ghost btn--sm" id="cancelOrderBtn" style="margin-top:8px">Cancel this order</button>
       </div>
-      <a class="btn btn--primary btn--block" id="trackLink" href="/account#orders">Track My Order</a>
+      <a class="btn btn--primary btn--block" id="waLink" href="https://wa.me/918108106522" target="_blank" rel="noopener">Send order details on WhatsApp</a>
+      <p class="text-muted" style="font-size:12.5px;margin:8px 0 14px">Tap to message us your order on WhatsApp — it helps us confirm your slot faster.</p>
+      <a class="btn btn--ghost btn--block" id="trackLink" href="/account#orders">Track My Order</a>
       <a class="btn btn--ghost btn--block mt-8" href="/shop">Continue Shopping</a>
     </div>
   </div>
 
-  <script src="scripts/products.js?v=31"></script>
-  <script src="scripts/app.js?v=31"></script>
+  <script src="scripts/products.js?v=32"></script>
+  <script src="scripts/app.js?v=32"></script>
   <script>
     (function () {
       "use strict";
@@ -363,10 +365,35 @@
         var track = document.getElementById("trackLink");
         if (track) track.href = "/account#orders";
         document.getElementById("successModal").classList.add("open");
+
+        // WhatsApp: pre-filled order message to the shop (button + automatic attempt)
+        var waUrl = whatsappUrl(o, copy);
+        var wa = document.getElementById("waLink");
+        if (wa) wa.href = waUrl;
+        try { var w = window.open(waUrl, "_blank", "noopener"); if (w) w.opener = null; } catch (e) {}
+
         AKF_CART.clear();
 
         // 10-minute self-cancel window
         startCancelWindow(o.id, o.trackToken || "", o.cancelSecondsLeft || 600);
+      }
+
+      /* ---- WhatsApp order message ---- */
+      function whatsappUrl(o, copy) {
+        var wl = function (w) { return w >= 1000 ? (w / 1000) + " kg" : w + " g"; };
+        var L = ["*New Order — AK Fishers*", "Order ID: #" + o.id, "Name: " + (o.name || copy.name || ""), "Mobile: " + (o.mobile || copy.mobile || ""), "", "*Items*"];
+        (copy.items || []).forEach(function (i) {
+          L.push("• " + i.name + " — " + wl(i.weight) + ", " + i.cut + " × " + i.qty + " = " + akfFormatINR(i.price));
+        });
+        L.push("");
+        if (o.discount) L.push("Discount" + (o.coupon ? " (" + o.coupon + ")" : "") + ": -" + akfFormatINR(o.discount));
+        L.push("Delivery charge: " + (o.deliveryCharge ? akfFormatINR(o.deliveryCharge) : "FREE"));
+        L.push("*Total: " + akfFormatINR(o.total) + "*");
+        L.push("Payment: " + o.payment + (/online/i.test(o.payment || "") ? " (UPI — I will send the payment screenshot here)" : ""));
+        L.push("Delivery: " + new Date(o.deliveryDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }) + ", " + o.slot);
+        L.push("Address: " + (o.address || ""));
+        L.push("", "Please confirm my order. Thank you!");
+        return "https://wa.me/918108106522?text=" + encodeURIComponent(L.join("\n"));
       }
 
       /* ---- Step 1: validate, then show the review & confirm modal ---- */

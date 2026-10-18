@@ -76,6 +76,22 @@
     window.dispatchEvent(new CustomEvent("akf:wishchange", { detail: w }));
   }
 
+  /* A saved cart line is only valid if the product still offers that weight and cut
+     (e.g. 250 g was removed). Invalid lines are ignored and cleaned out. */
+  function cartLineValid(p, i) {
+    if (p.priceOnRequest) return false;
+    if (p.weights && i.weight && p.weights.indexOf(i.weight) < 0) return false;
+    if (p.cuts && p.cuts.length && i.cut && p.cuts.indexOf(i.cut) < 0) return false;
+    return true;
+  }
+  function sanitizeCart() {
+    try {
+      var c = readCart();
+      var ok = c.filter(function (i) { var p = akfGetProduct(i.id); return p && cartLineValid(p, i); });
+      if (ok.length !== c.length) writeCart(ok);
+    } catch (e) {}
+  }
+
   window.AKF_CART = {
     get: readCart,
     set: writeCart,
@@ -113,7 +129,7 @@
     subtotal: function () {
       return readCart().reduce(function (sum, i) {
         var p = akfGetProduct(i.id);
-        if (!p) return sum;
+        if (!p || !cartLineValid(p, i)) return sum;
         var price = i.weight ? p.price * (i.weight / 1000) : p.price;
         return sum + price * i.qty;
       }, 0);
@@ -121,7 +137,7 @@
     items: function () {
       return readCart().map(function (i) {
         var p = akfGetProduct(i.id);
-        if (!p) return null;
+        if (!p || !cartLineValid(p, i)) return null;
         return { item: i, product: p, lineTotal: (i.weight ? p.price * (i.weight / 1000) : p.price) * i.qty };
       }).filter(function (x) { return x; });
     }
@@ -505,7 +521,7 @@
       var p = akfGetProduct(id);
       if (!p) return;
       if (p.priceOnRequest) { window.open(akfAskPriceLink(p), "_blank", "noopener"); return; }
-      var weight = p.weights[1] || p.weights[0] || 500;
+      var weight = p.weights.indexOf(500) > -1 ? 500 : (p.weights[0] || 500);
       var cut = p.cuts[0];
       AKF_CART.add(id, weight, cut, 1);
       toast(p.name + " added to cart", "success");
@@ -524,6 +540,7 @@
 
   /* ---------- Init ---------- */
   document.addEventListener("DOMContentLoaded", function () {
+    sanitizeCart();
     renderHeader();
     renderFooter();
 
