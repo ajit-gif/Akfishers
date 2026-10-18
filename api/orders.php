@@ -78,6 +78,7 @@ if (($in['op'] ?? '') === 'cancel') {
     $db->prepare('UPDATE orders SET status = "cancelled", updated_at = ? WHERE id = ?')
        ->execute([gmdate('Y-m-d H:i:s'), (int)$o['id']]);
     error_log('[akf-order] ' . $oid . ' cancelled by customer');
+    send_mail_safe((string)($CFG['notify_email'] ?? 'akfisheriesofficial@gmail.com'), "Order $oid CANCELLED by customer", "The customer cancelled order $oid within the free-cancellation window.\n");
     ok(['order' => ['id' => $oid, 'status' => 'cancelled']]);
 }
 
@@ -198,6 +199,25 @@ for ($try = 0; $try < 5; $try++) {
 if ($pid === null) fail(500, 'server_error', 'Could not place the order. Please try again.');
 
 record_attempt($db, 'order', $phone, true);
+
+/* -- notify the shop (and the customer, if they gave an e-mail). Best effort only. -- */
+$lines = [];
+foreach ($items as $it) {
+    $w = $it['weight'] >= 1000 ? ($it['weight'] / 1000) . ' kg' : $it['weight'] . ' g';
+    $lines[] = '  - ' . $it['name'] . ' | ' . $w . ' | ' . ($it['cut'] !== '' ? $it['cut'] : 'n/a') . ' x ' . $it['qty'] . ' = Rs ' . $it['price'];
+}
+$summary = "Order #$pid\n"
+    . 'Name: ' . $name . "\nMobile: +" . $phone . ($email ? "\nEmail: $email" : '') . "\n\nItems:\n" . implode("\n", $lines)
+    . "\n\nSubtotal: Rs $subtotal" . ($discount ? "\nDiscount" . ($couponCode ? " ($couponCode)" : '') . ": -Rs $discount" : '')
+    . "\nDelivery charge: " . ($delivery ? "Rs $delivery" : 'FREE') . "\nTOTAL: Rs $total\nPayment: $pay"
+    . "\nDelivery: $date, $slot\nAddress: $addressText\n";
+$notify = (string)($CFG['notify_email'] ?? 'akfisheriesofficial@gmail.com');
+send_mail_safe($notify, "New order #$pid — Rs $total", $summary . "\nManage it in the admin panel: " . APP_URL . "/admin\n", $email ?: null);
+if ($email) {
+    send_mail_safe($email, "Your AK Fishers order #$pid is confirmed",
+        "Hi $name,\n\nThank you for ordering from AK Fishers! Here are your order details.\n\n" . $summary
+        . "\nWe will call you shortly to confirm your delivery slot. You can cancel free of charge within 10 minutes of ordering from your order confirmation page or My Account.\n\nAK Fishers Supplier LLP\n+91 81081 06522 | " . APP_URL . "\n", $notify);
+}
 
 ok(['order' => [
     'id'            => $pid,

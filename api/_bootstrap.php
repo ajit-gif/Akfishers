@@ -403,4 +403,30 @@ function user_public(array $row): array {
     ];
 }
 
+/* ------------------------------------------------------------------ *
+ *  Best-effort e-mail (never blocks or fails a request)
+ * ------------------------------------------------------------------ */
+function clean_header(string $s): string { return trim(preg_replace('/[\r\n]+/', ' ', $s) ?? ''); }
+
+function send_mail_safe(string $to, string $subject, string $body, ?string $replyTo = null): bool {
+    global $CFG;
+    try {
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL) || !function_exists('mail')) return false;
+        $host = parse_url(APP_URL, PHP_URL_HOST) ?: 'akfishers.com';
+        $from = (string)($CFG['mail_from'] ?? ('no-reply@' . $host));
+        $h = ['From: AK Fishers <' . clean_header($from) . '>',
+              'MIME-Version: 1.0',
+              'Content-Type: text/plain; charset=UTF-8',
+              'Content-Transfer-Encoding: 8bit'];
+        if ($replyTo && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) $h[] = 'Reply-To: ' . clean_header($replyTo);
+        $subj = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader(clean_header($subject), 'UTF-8') : clean_header($subject);
+        $ok = @mail($to, $subj, $body, implode("\r\n", $h));
+        if (!$ok) error_log('[akf-mail] mail() returned false for ' . $to);
+        return $ok;
+    } catch (Throwable $e) {
+        error_log('[akf-mail] ' . $e->getMessage());
+        return false;
+    }
+}
+
 gc_maybe($db);

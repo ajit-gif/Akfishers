@@ -7,12 +7,23 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Checkout — AK Fishers</title>
   <meta name="description" content="Complete your fresh seafood order — delivery details, slots and payment.">
-  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=32">
-  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=32">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png?v=33">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png?v=33">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css?v=32">
+  <link rel="stylesheet" href="styles/shared.css?v=33">
+  <style>
+    .so-summary { background: var(--off-white); border-radius: var(--r-md); padding: 14px 16px; font-size: 13.5px; color: var(--ink-soft); margin: 4px 0 16px; }
+    .so-summary .so-item { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+    .so-summary .so-item span:first-child { color: var(--ink); }
+    .so-summary .so-line { display: flex; justify-content: space-between; padding: 4px 0; }
+    .so-summary .so-total { font-weight: 800; color: var(--ink); font-size: 15px; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 8px; }
+    .so-summary .so-meta { margin-top: 10px; line-height: 1.7; }
+    .so-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .so-wa { font-size: 12.5px; color: var(--muted); margin: 14px 0 6px; text-align: center; line-height: 1.6; }
+    .so-wa a { color: var(--ocean-600); font-weight: 600; text-decoration: underline; }
+  </style>
 </head>
 <body>
 
@@ -78,30 +89,37 @@
 
   <!-- Order success modal -->
   <div class="modal-backdrop" id="successModal">
-    <div class="modal" style="text-align:center">
-      <div style="width:76px;height:76px;border-radius:50%;background:var(--sea-green-soft);color:var(--sea-green-dark);display:grid;place-items:center;margin:0 auto 18px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px"><path d="M20 6L9 17l-5-5"/></svg>
+    <div class="modal" style="max-height:92vh;overflow-y:auto;overflow-x:hidden">
+      <div style="text-align:center">
+        <div style="width:68px;height:68px;border-radius:50%;background:var(--sea-green-soft);color:var(--sea-green-dark);display:grid;place-items:center;margin:0 auto 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h3>Order Placed Successfully!</h3>
+        <p class="modal-sub">Your order number is <b id="orderId">#AKF-0000</b>.<br>We'll call you on <b id="orderPhone"></b> to confirm your delivery slot.</p>
       </div>
-      <h3>Order Placed Successfully!</h3>
-      <p class="modal-sub">Your fresh seafood order <b id="orderId">#AKF-0000</b> is confirmed.<br>We'll call you shortly to confirm the delivery slot.</p>
-      <div style="background:var(--off-white);border-radius:var(--r-md);padding:14px;font-size:13.5px;color:var(--ink-soft);margin-bottom:16px">
-        Expected delivery: <b id="orderDate"></b> · <span id="orderSlot"></span><br>
-        Payment: <b id="orderPay"></b>
-      </div>
+
+      <div id="orderSummary" class="so-summary"></div>
+
+      <div id="successUpi"></div>
+
       <div id="cancelBox" class="cs-note" style="display:none;background:#fdf3e0;color:#b97a12;margin-bottom:14px">
         Changed your mind? You can cancel this order for free for the next
         <b id="cancelCountdown">10:00</b>.
         <button class="btn btn--ghost btn--sm" id="cancelOrderBtn" style="margin-top:8px">Cancel this order</button>
       </div>
-      <a class="btn btn--primary btn--block" id="waLink" href="https://wa.me/918108106522" target="_blank" rel="noopener">Send order details on WhatsApp</a>
-      <p class="text-muted" style="font-size:12.5px;margin:8px 0 14px">Tap to message us your order on WhatsApp — it helps us confirm your slot faster.</p>
-      <a class="btn btn--ghost btn--block" id="trackLink" href="/account#orders">Track My Order</a>
+
+      <a class="btn btn--primary btn--block" id="trackLink" href="/account#orders">Track My Order</a>
+      <div class="so-row">
+        <button class="btn btn--ghost" id="copyOrderBtn" type="button">Copy order details</button>
+        <a class="btn btn--ghost" href="tel:+918108106522">Call us</a>
+      </div>
+      <p class="so-wa">Optional: <a id="waLink" href="https://wa.me/918108106522" target="_blank" rel="noopener">also send these details on WhatsApp</a> — your order is already placed, you don't need WhatsApp.</p>
       <a class="btn btn--ghost btn--block mt-8" href="/shop">Continue Shopping</a>
     </div>
   </div>
 
-  <script src="scripts/products.js?v=32"></script>
-  <script src="scripts/app.js?v=32"></script>
+  <script src="scripts/products.js?v=33"></script>
+  <script src="scripts/app.js?v=33"></script>
   <script>
     (function () {
       "use strict";
@@ -359,41 +377,76 @@
         AKF_USER.saveGuest({ name: copy.name, mobile: copy.mobile, email: document.getElementById("email").value.trim() });
 
         document.getElementById("orderId").textContent = "#" + o.id;
-        document.getElementById("orderDate").textContent = new Date(o.deliveryDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
-        document.getElementById("orderSlot").textContent = o.slot;
-        document.getElementById("orderPay").textContent = o.payment;
+        document.getElementById("orderPhone").textContent = "+91 " + (o.mobile || copy.mobile || "");
         var track = document.getElementById("trackLink");
         if (track) track.href = "/account#orders";
-        document.getElementById("successModal").classList.add("open");
 
-        // WhatsApp: pre-filled order message to the shop (button + automatic attempt)
-        var waUrl = whatsappUrl(o, copy);
+        // Full order confirmation (works with or without WhatsApp)
+        renderSummary(o, copy);
+        var upi = document.getElementById("successUpi");
+        if (upi) upi.innerHTML = /online/i.test(o.payment || "") ? akfUpiPanel(o.total) : "";
+
+        // WhatsApp is optional: a plain link, never opened automatically
         var wa = document.getElementById("waLink");
-        if (wa) wa.href = waUrl;
-        try { var w = window.open(waUrl, "_blank", "noopener"); if (w) w.opener = null; } catch (e) {}
+        if (wa) wa.href = whatsappUrl(o, copy);
+        var cp = document.getElementById("copyOrderBtn");
+        if (cp) cp.onclick = function () { copyText(orderText(o, copy).join("\n"), cp); };
 
+        document.getElementById("successModal").classList.add("open");
         AKF_CART.clear();
 
         // 10-minute self-cancel window
         startCancelWindow(o.id, o.trackToken || "", o.cancelSecondsLeft || 600);
       }
 
-      /* ---- WhatsApp order message ---- */
-      function whatsappUrl(o, copy) {
-        var wl = function (w) { return w >= 1000 ? (w / 1000) + " kg" : w + " g"; };
-        var L = ["*New Order — AK Fishers*", "Order ID: #" + o.id, "Name: " + (o.name || copy.name || ""), "Mobile: " + (o.mobile || copy.mobile || ""), "", "*Items*"];
+      /* ---- Order text (copy / WhatsApp) + on-screen summary ---- */
+      function wlabel(w) { return w >= 1000 ? (w / 1000) + " kg" : w + " g"; }
+      function dlabel(o) { return new Date(o.deliveryDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }); }
+
+      function orderText(o, copy) {
+        var L = ["New Order — AK Fishers", "Order ID: #" + o.id, "Name: " + (o.name || copy.name || ""), "Mobile: " + (o.mobile || copy.mobile || ""), "", "Items:"];
         (copy.items || []).forEach(function (i) {
-          L.push("• " + i.name + " — " + wl(i.weight) + ", " + i.cut + " × " + i.qty + " = " + akfFormatINR(i.price));
+          L.push("• " + i.name + " — " + wlabel(i.weight) + ", " + i.cut + " × " + i.qty + " = " + akfFormatINR(i.price));
         });
         L.push("");
         if (o.discount) L.push("Discount" + (o.coupon ? " (" + o.coupon + ")" : "") + ": -" + akfFormatINR(o.discount));
         L.push("Delivery charge: " + (o.deliveryCharge ? akfFormatINR(o.deliveryCharge) : "FREE"));
-        L.push("*Total: " + akfFormatINR(o.total) + "*");
-        L.push("Payment: " + o.payment + (/online/i.test(o.payment || "") ? " (UPI — I will send the payment screenshot here)" : ""));
-        L.push("Delivery: " + new Date(o.deliveryDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }) + ", " + o.slot);
+        L.push("Total: " + akfFormatINR(o.total));
+        L.push("Payment: " + o.payment);
+        L.push("Delivery: " + dlabel(o) + ", " + o.slot);
         L.push("Address: " + (o.address || ""));
+        return L;
+      }
+
+      function whatsappUrl(o, copy) {
+        var L = orderText(o, copy);
+        L[0] = "*New Order — AK Fishers*";
         L.push("", "Please confirm my order. Thank you!");
         return "https://wa.me/918108106522?text=" + encodeURIComponent(L.join("\n"));
+      }
+
+      function renderSummary(o, copy) {
+        var rows = (copy.items || []).map(function (i) {
+          return '<div class="so-item"><span>' + akfEscapeHTML(i.name) + ' <small>· ' + wlabel(i.weight) + ' · ' + akfEscapeHTML(i.cut) + ' × ' + i.qty + '</small></span><span>' + akfFormatINR(i.price) + '</span></div>';
+        }).join("");
+        var lines = '';
+        if (o.discount) lines += '<div class="so-line"><span>Discount' + (o.coupon ? ' (' + akfEscapeHTML(o.coupon) + ')' : '') + '</span><span>− ' + akfFormatINR(o.discount) + '</span></div>';
+        lines += '<div class="so-line"><span>Delivery</span><span>' + (o.deliveryCharge ? akfFormatINR(o.deliveryCharge) : 'FREE') + '</span></div>';
+        lines += '<div class="so-line so-total"><span>Total</span><span>' + akfFormatINR(o.total) + '</span></div>';
+        var meta = '<div class="so-meta">' +
+          '<div><b>Delivery:</b> ' + dlabel(o) + ' · ' + akfEscapeHTML(o.slot) + '</div>' +
+          '<div><b>Payment:</b> ' + akfEscapeHTML(o.payment) + '</div>' +
+          '<div><b>Address:</b> ' + akfEscapeHTML(o.address || "") + '</div>' +
+          '</div>';
+        document.getElementById("orderSummary").innerHTML = rows + lines + meta;
+      }
+
+      function copyText(text, btn) {
+        var done = function () { if (btn) { var t = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = t; }, 2000); } };
+        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, function () {}); return; }
+        var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) {}
+        ta.remove();
       }
 
       /* ---- Step 1: validate, then show the review & confirm modal ---- */
